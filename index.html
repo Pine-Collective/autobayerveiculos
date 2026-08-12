@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Catálogo de veículos Autobayer Veículos." />
+  <title>Autobayer Veículos | Seu próximo carro está aqui</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="topbar"><div class="container topbar-inner"><span>Compra, venda e troca com confiança</span><span class="topbar-right">Atendimento: Seg–Sex, 8h às 18h <i></i> (11) 99999-0000</span></div></div>
+  <header class="site-header"><div class="container nav-wrap">
+    <a class="brand" href="#inicio" aria-label="Autobayer Veículos início"><img src="AUTOBAYER TOP.png" alt="Autobayer Veículos"></a>
+    <nav class="main-nav" aria-label="Navegação principal"><a href="#inicio">Início</a><a href="#estoque">Estoque</a><a href="#sobre">A Autobayer</a><a href="#contato">Contato</a></nav>
+    <a class="header-whatsapp" href="https://wa.me/5511999990000" target="_blank" rel="noreferrer"><span class="wa-icon">◔</span> Fale conosco</a><button class="menu-toggle" aria-label="Abrir menu">☰</button>
+  </div></header>
+  <main>
+    <section class="hero" id="inicio"><div class="hero-grid container"><div class="hero-copy"><p class="eyebrow"><span></span> O SEU PRÓXIMO CARRO ESTÁ AQUI</p><h1>Escolha seu<br><em>próximo destino.</em></h1><p class="hero-text">Veículos selecionados, revisados e prontos para você. Encontre o carro ideal para cada momento da sua vida.</p><a href="#estoque" class="btn btn-primary">Ver veículos disponíveis <b>↗</b></a></div><div class="hero-visual"><div class="hero-glow"></div><img src="https://images.unsplash.com/photo-1552519507-da3b142c6e3d?auto=format&fit=crop&w=1300&q=85" alt="Carro esportivo preto em destaque"><div class="hero-tag"><strong>+10</strong><span>anos realizando<br>bons negócios</span></div></div></div><div class="hero-bottom container"><div><strong>+500</strong><span>clientes satisfeitos</span></div><div><strong>+40</strong><span>veículos no estoque</span></div><div><strong>100%</strong><span>procedência garantida</span></div></div></section>
+    <section class="catalog-section" id="estoque"><div class="container"><div class="section-heading"><div><p class="eyebrow"><span></span> ESTOQUE AUTOBAYER</p><h2>Encontre o carro <em>que combina com você.</em></h2></div><button class="text-link" id="clearFilters">Limpar filtros <span>↻</span></button></div><div class="catalog-toolbar"><div class="search-box"><span>⌕</span><input id="searchInput" type="search" placeholder="Busque por marca, modelo..." /></div><div class="filters"><select id="typeFilter"><option value="all">Todos os tipos</option><option value="SUV">SUV</option><option value="Sedan">Sedan</option><option value="Hatch">Hatch</option><option value="Picape">Picape</option></select><select id="priceFilter"><option value="all">Qualquer preço</option><option value="80">Até R$ 80 mil</option><option value="150">Até R$ 150 mil</option><option value="250">Até R$ 250 mil</option></select><select id="sortFilter"><option value="featured">Destaques</option><option value="lower">Menor preço</option><option value="higher">Maior preço</option></select></div></div><div class="category-row"><button class="category active" data-category="all">Todos <small>06</small></button><button class="category" data-category="SUV">SUV <small>02</small></button><button class="category" data-category="Sedan">Sedan <small>02</small></button><button class="category" data-category="Hatch">Hatch <small>01</small></button><button class="category" data-category="Picape">Picape <small>01</small></button></div><div class="vehicle-grid" id="vehicleGrid"></div><div class="empty-state" id="emptyState">Nenhum veículo encontrado. Tente ajustar os filtros.</div></div></section>
+    <section class="trust-section" id="sobre"><div class="container trust-grid"><div><p class="eyebrow"><span></span> POR QUE A AUTOBAYER?</p><h2>Negócio bom é<br><em>negócio tranquilo.</em></h2></div><div class="trust-items"><div class="trust-item"><b>01</b><div><h3>Procedência garantida</h3><p>Todos os nossos veículos passam por uma avaliação criteriosa.</p></div></div><div class="trust-item"><b>02</b><div><h3>Financiamento fácil</h3><p>As melhores condições para você sair de carro novo hoje.</p></div></div><div class="trust-item"><b>03</b><div><h3>Atendimento humano</h3><p>Consultores especialistas prontos para ajudar você.</p></div></div></div></div></section>
+    <section class="contact-section" id="contato"><div class="container contact-card"><div><p class="eyebrow"><span></span> VAMOS CONVERSAR?</p><h2>Seu carro novo<br><em>começa aqui.</em></h2></div><a class="btn btn-primary" href="https://wa.me/5511999990000?text=Olá!%20Vi%20o%20catálogo%20da%20Autobayer%20e%20quero%20encontrar%20meu%20próximo%20carro." target="_blank" rel="noreferrer">Chamar no WhatsApp <b>↗</b></a></div></section>
+  </main>
+  <footer><div class="container footer-inner"><img src="AUTOBAYER TOP.png" alt="Autobayer Veículos"><span>© 2024 Autobayer Veículos. Todos os direitos reservados.</span><span>São Paulo, SP</span></div></footer>
+  <div class="modal-backdrop" id="modalBackdrop"><div class="vehicle-modal" role="dialog" aria-modal="true"><button class="modal-close" id="modalClose" aria-label="Fechar">×</button><div id="modalContent"></div></div></div>
+  <script src="app.js"></script>
+</body></html>
