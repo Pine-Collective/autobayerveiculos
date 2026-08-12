@@ -1,0 +1,1269 @@
+/* =====================================================================
+   Autobayer Veículos — folha de estilo principal
+   Sumário:
+     1.  Tokens e base
+     2.  Utilitários de acessibilidade
+     3.  Topbar e cabeçalho
+     4.  Menu mobile
+     5.  Hero
+     6.  Catálogo: barra de ferramentas e filtros
+     7.  Card de veículo
+     8.  Seção de confiança e contato
+     9.  Rodapé
+     10. Modal do veículo
+     11. Responsivo
+     12. Movimento reduzido / impressão
+   ================================================================== */
+
+/* ---------------------------------------------------------------------
+   1. Tokens e base
+   ------------------------------------------------------------------ */
+
+:root {
+  --bg: #090a0c;
+  --surface: #111316;
+  --line: #2a2d32;
+  --text: #f3f3f1;
+
+  /* Tons de texto secundário revisados para passar no WCAG AA (>= 4.5:1)
+     sobre os fundos escuros do site. Os valores antigos (#555, #777, #6f7278)
+     reprovavam em texto pequeno. */
+  --muted: #9a9da3;
+  --muted-soft: #8f9298;
+
+  --red: #d21f2b;
+  --red2: #ff3946;
+  --focus: #ff7b85;
+
+  --display: 'Barlow Condensed', sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'DM Sans', sans-serif;
+}
+
+a {
+  text-decoration: none;
+  color: inherit;
+}
+
+img {
+  max-width: 100%;
+}
+
+.container {
+  width: min(1160px, calc(100% - 48px));
+  margin: auto;
+}
+
+/* ---------------------------------------------------------------------
+   2. Utilitários de acessibilidade
+   ------------------------------------------------------------------ */
+
+/* Visível só para leitores de tela. */
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.skip-link {
+  position: absolute;
+  left: 12px;
+  top: -60px;
+  z-index: 100;
+  background: var(--red);
+  color: #fff;
+  padding: 12px 18px;
+  border-radius: 3px;
+  font-size: 12px;
+  font-weight: 700;
+  transition: top 0.18s;
+}
+
+.skip-link:focus {
+  top: 12px;
+}
+
+/* Foco visível e consistente em tudo que é interativo. Antes vários
+   elementos zeravam borda e fundo, deixando o foco quase invisível. */
+:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 3px;
+  border-radius: 2px;
+}
+
+/* ---------------------------------------------------------------------
+   3. Topbar e cabeçalho
+   ------------------------------------------------------------------ */
+
+.topbar {
+  background: #050506;
+  border-bottom: 1px solid #202226;
+  color: var(--muted);
+  font-size: 11px;
+  letter-spacing: 0.04em;
+}
+
+.topbar-inner {
+  height: 34px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.topbar-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.topbar-right i {
+  height: 3px;
+  width: 3px;
+  border-radius: 50%;
+  background: var(--red);
+}
+
+.topbar-right a:hover {
+  color: #fff;
+}
+
+.site-header {
+  height: 82px;
+  background: #090a0cf5;
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  border-bottom: 1px solid #202226;
+}
+
+.nav-wrap {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  gap: 55px;
+}
+
+.brand picture,
+.footer-inner picture {
+  display: block;
+}
+
+.brand img {
+  width: 175px;
+  height: auto;
+  display: block;
+}
+
+.main-nav {
+  display: flex;
+  gap: 34px;
+  margin-left: auto;
+  font-size: 13px;
+  color: #a9abb0;
+}
+
+/* O link ativo agora acompanha a rolagem (scroll spy no app.js). */
+.main-nav a:hover,
+.main-nav a.active {
+  color: #fff;
+}
+
+.header-whatsapp {
+  margin-left: 20px;
+  border: 1px solid #35373d;
+  padding: 11px 16px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 700;
+  transition: border-color 0.2s;
+}
+
+.header-whatsapp:hover {
+  border-color: #6a6d75;
+}
+
+.wa-icon {
+  color: #25d366;
+  font-size: 15px;
+  margin-right: 5px;
+}
+
+/* ---------------------------------------------------------------------
+   4. Menu mobile
+   ------------------------------------------------------------------ */
+
+.menu-toggle {
+  display: none;
+  background: none;
+  border: 0;
+  color: #fff;
+  font-size: 22px;
+  cursor: pointer;
+  padding: 6px 8px;
+}
+
+/* ---------------------------------------------------------------------
+   5. Hero
+   ------------------------------------------------------------------ */
+
+.hero {
+  min-height: 600px;
+  overflow: hidden;
+  border-bottom: 1px solid #202226;
+  background: radial-gradient(ellipse at 82% 43%, #25282d 0, #0e1013 34%, #090a0c 69%);
+}
+
+.hero-grid {
+  height: 500px;
+  display: grid;
+  grid-template-columns: 43% 57%;
+  align-items: center;
+}
+
+.hero-copy {
+  position: relative;
+  z-index: 1;
+}
+
+.eyebrow {
+  color: #a7a9ad;
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  font-weight: 700;
+  margin: 0 0 19px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.eyebrow span {
+  display: inline-block;
+  width: 24px;
+  height: 2px;
+  background: var(--red);
+  flex: none;
+}
+
+h1,
+h2 {
+  font-family: var(--display);
+  text-transform: uppercase;
+  letter-spacing: 0.01em;
+  line-height: 0.86;
+  margin: 0;
+  font-size: 77px;
+  font-weight: 700;
+}
+
+h1 em,
+h2 em {
+  font-style: normal;
+  color: var(--red);
+}
+
+.hero-text {
+  font-size: 14px;
+  line-height: 1.7;
+  color: #9b9da2;
+  max-width: 385px;
+  margin: 26px 0 30px;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 20px;
+  border-radius: 3px;
+  padding: 16px 21px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 11px;
+  font-weight: 700;
+  transition: 0.2s;
+  cursor: pointer;
+}
+
+.btn-primary {
+  background: var(--red);
+  color: #fff;
+  box-shadow: 0 8px 25px #d21f2b2b;
+}
+
+.btn-primary:hover {
+  background: var(--red2);
+  transform: translateY(-2px);
+}
+
+.btn b {
+  font-size: 17px;
+  font-weight: 400;
+}
+
+.hero-visual {
+  height: 100%;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.hero-visual img {
+  width: 115%;
+  max-width: none;
+  height: 90%;
+  object-fit: cover;
+  object-position: center;
+  border-radius: 2px;
+  mix-blend-mode: screen;
+  opacity: 0.75;
+  mask-image: linear-gradient(90deg, transparent 0%, #000 19%, #000 88%, transparent 100%);
+}
+
+.hero-glow {
+  position: absolute;
+  width: 410px;
+  height: 250px;
+  background: #d21f2b1c;
+  filter: blur(75px);
+  right: 50px;
+}
+
+.hero-tag {
+  position: absolute;
+  right: 18px;
+  bottom: 55px;
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  border-left: 2px solid var(--red);
+  padding-left: 13px;
+}
+
+.hero-tag strong {
+  font-family: var(--display);
+  font-size: 38px;
+}
+
+.hero-tag span {
+  font-size: 10px;
+  line-height: 1.35;
+  color: #aeb0b4;
+  text-transform: uppercase;
+}
+
+.hero-bottom {
+  height: 100px;
+  display: flex;
+  align-items: center;
+  gap: 75px;
+}
+
+.hero-bottom div {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+}
+
+.hero-bottom strong {
+  font-family: var(--display);
+  font-size: 30px;
+}
+
+.hero-bottom span {
+  font-size: 11px;
+  color: var(--muted-soft);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* ---------------------------------------------------------------------
+   6. Catálogo: barra de ferramentas e filtros
+   ------------------------------------------------------------------ */
+
+.catalog-section {
+  padding: 86px 0 105px;
+  background: #0c0d0f;
+}
+
+.section-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: end;
+  margin-bottom: 38px;
+}
+
+.section-heading h2,
+.trust-section h2,
+.contact-card h2 {
+  font-size: 53px;
+}
+
+.text-link {
+  background: none;
+  border: 0;
+  color: #a3a5aa;
+  font-size: 12px;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.text-link:hover {
+  color: #fff;
+}
+
+.text-link span {
+  color: var(--red);
+  font-size: 17px;
+  margin-left: 7px;
+}
+
+.catalog-toolbar {
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+  margin-bottom: 22px;
+}
+
+.search-box {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 3px;
+  display: flex;
+  align-items: center;
+  width: 310px;
+  padding: 0 14px;
+  color: var(--muted);
+}
+
+.search-box:focus-within {
+  border-color: #6a6d75;
+}
+
+.search-icon {
+  font-size: 24px;
+  transform: rotate(-20deg);
+  margin-right: 9px;
+}
+
+.search-box input {
+  width: 100%;
+  padding: 13px 0;
+  background: none;
+  border: 0;
+  outline: 0;
+  color: #fff;
+  font: inherit;
+  font-size: 12px;
+}
+
+.filters {
+  display: flex;
+  gap: 10px;
+}
+
+select {
+  background: var(--surface);
+  color: #c3c5c9;
+  border: 1px solid var(--line);
+  border-radius: 3px;
+  padding: 12px 15px;
+  min-width: 145px;
+  font: inherit;
+  font-size: 11px;
+  cursor: pointer;
+}
+
+/* Sem isto, o dropdown nativo herda cores do sistema e fica ilegível
+   em alguns navegadores no Windows. */
+select option {
+  background: var(--surface);
+  color: var(--text);
+}
+
+.category-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  border-bottom: 1px solid var(--line);
+  margin-bottom: 28px;
+}
+
+.category-row {
+  display: flex;
+  gap: 28px;
+  overflow-x: auto;
+  scrollbar-width: thin;
+}
+
+.category {
+  border: 0;
+  background: none;
+  color: #8b8e94;
+  padding: 0 0 15px;
+  font:
+    700 12px 'DM Sans',
+    sans-serif;
+  cursor: pointer;
+  white-space: nowrap;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+}
+
+.category small {
+  color: #8b8e94;
+  margin-left: 4px;
+  font-size: 9px;
+}
+
+.category.active,
+.category:hover {
+  color: #fff;
+  border-bottom-color: var(--red);
+}
+
+.fav-toggle {
+  background: none;
+  border: 1px solid var(--line);
+  border-radius: 3px;
+  color: var(--muted);
+  font:
+    700 11px 'DM Sans',
+    sans-serif;
+  padding: 8px 12px;
+  margin-bottom: 12px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: 0.2s;
+}
+
+.fav-toggle:hover {
+  color: #fff;
+  border-color: #6a6d75;
+}
+
+.fav-toggle.active {
+  color: #fff;
+  border-color: var(--red);
+  background: #d21f2b1f;
+}
+
+.fav-toggle span:first-child {
+  color: var(--red2);
+  margin-right: 4px;
+}
+
+/* ---------------------------------------------------------------------
+   7. Card de veículo
+   ------------------------------------------------------------------ */
+
+.vehicle-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 18px;
+}
+
+.vehicle-card {
+  background: var(--surface);
+  border: 1px solid #22252a;
+  position: relative;
+  cursor: pointer;
+  transition: 0.25s;
+  overflow: hidden;
+}
+
+.vehicle-card:hover,
+.vehicle-card:focus-visible {
+  transform: translateY(-5px);
+  border-color: #484b51;
+}
+
+.vehicle-card.is-sold {
+  opacity: 0.62;
+}
+
+.vehicle-card.is-sold .vehicle-image img {
+  filter: grayscale(1);
+}
+
+.vehicle-image {
+  height: 195px;
+  position: relative;
+  overflow: hidden;
+  background: #202226;
+}
+
+.vehicle-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: 0.4s;
+}
+
+.vehicle-card:hover .vehicle-image img {
+  transform: scale(1.05);
+}
+
+.badge {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  background: var(--red);
+  color: #fff;
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  padding: 6px 8px;
+  letter-spacing: 0.08em;
+}
+
+.badge-sold {
+  background: #303338;
+  color: #e6e7e9;
+}
+
+.heart {
+  position: absolute;
+  top: 10px;
+  right: 12px;
+  border: 0;
+  background: #08090acc;
+  color: #fff;
+  font-size: 19px;
+  line-height: 1;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  cursor: pointer;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+}
+
+.heart.saved {
+  color: var(--red2);
+}
+
+.vehicle-info {
+  padding: 19px 18px 20px;
+}
+
+.vehicle-title {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.vehicle-title h3 {
+  font-family: var(--display);
+  font-size: 25px;
+  text-transform: uppercase;
+  margin: 0;
+  font-weight: 600;
+}
+
+.vehicle-year {
+  font-size: 10px;
+  color: var(--muted);
+  border: 1px solid #363940;
+  padding: 4px 6px;
+  height: max-content;
+}
+
+.vehicle-sub {
+  color: var(--muted);
+  font-size: 11px;
+  margin: 6px 0 17px;
+}
+
+.vehicle-meta {
+  border-top: 1px solid #292c30;
+  padding-top: 13px;
+  display: flex;
+  justify-content: space-between;
+  align-items: end;
+}
+
+.vehicle-meta span {
+  font-size: 10px;
+  color: var(--muted-soft);
+}
+
+.price {
+  color: #fff;
+  font-size: 17px;
+  font-weight: 700;
+}
+
+.card-arrow {
+  color: var(--red);
+  font-size: 19px;
+}
+
+.empty-state {
+  color: #a5a8ad;
+  text-align: center;
+  padding: 60px 20px;
+  font-size: 14px;
+}
+
+.empty-state a {
+  color: var(--red2);
+  text-decoration: underline;
+}
+
+/* ---------------------------------------------------------------------
+   8. Seção de confiança e contato
+   ------------------------------------------------------------------ */
+
+.trust-section {
+  padding: 88px 0;
+  background: #111316;
+}
+
+.trust-grid {
+  display: grid;
+  grid-template-columns: 42% 58%;
+  gap: 80px;
+}
+
+.trust-items {
+  border-top: 1px solid var(--line);
+}
+
+.trust-item {
+  display: flex;
+  gap: 25px;
+  padding: 22px 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.trust-item > b {
+  font-family: var(--display);
+  font-size: 20px;
+  color: var(--red);
+}
+
+.trust-item h3 {
+  margin: 0 0 5px;
+  font-family: var(--display);
+  font-size: 23px;
+  text-transform: uppercase;
+}
+
+.trust-item p {
+  font-size: 12px;
+  color: var(--muted);
+  margin: 0;
+}
+
+.contact-section {
+  padding: 65px 0;
+  background: var(--red);
+}
+
+.contact-card {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+/* Branco puro: 5.29:1 sobre o vermelho da seção. O rosa claro anterior
+   (#f4b4b8) ficava em 2.6:1 e reprovava no WCAG AA. */
+.contact-card .eyebrow {
+  color: #fff;
+}
+
+.contact-card .eyebrow span {
+  background: #fff;
+}
+
+.contact-card h2 {
+  font-size: 52px;
+}
+
+.contact-card h2 em {
+  color: #100d0e;
+}
+
+.contact-card .btn {
+  background: #0b0d0f;
+}
+
+.contact-card .btn:hover {
+  background: #000;
+}
+
+/* ---------------------------------------------------------------------
+   9. Rodapé
+   ------------------------------------------------------------------ */
+
+footer {
+  background: #060708;
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.footer-inner {
+  height: 82px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+}
+
+.footer-inner img {
+  width: 125px;
+  height: auto;
+}
+
+/* ---------------------------------------------------------------------
+   10. Modal do veículo
+   ------------------------------------------------------------------ */
+
+.modal-backdrop {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: #000c;
+  z-index: 10;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.modal-backdrop.open {
+  display: flex;
+}
+
+.vehicle-modal {
+  background: #15171a;
+  max-width: 850px;
+  width: 100%;
+  position: relative;
+  border: 1px solid #35383e;
+  max-height: 90vh;
+  overflow: auto;
+}
+
+.modal-close {
+  position: absolute;
+  right: 15px;
+  top: 10px;
+  background: #090a0ce0;
+  color: #fff;
+  border: 0;
+  border-radius: 50%;
+  font-size: 26px;
+  line-height: 1;
+  width: 35px;
+  height: 35px;
+  z-index: 2;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+}
+
+.modal-layout {
+  display: grid;
+  grid-template-columns: 52% 48%;
+}
+
+.modal-media {
+  position: relative;
+  background: #202226;
+}
+
+.modal-media > img {
+  width: 100%;
+  height: 100%;
+  min-height: 360px;
+  object-fit: cover;
+  display: block;
+}
+
+.modal-thumbs {
+  position: absolute;
+  left: 12px;
+  bottom: 12px;
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  max-width: calc(100% - 24px);
+}
+
+.modal-thumb {
+  border: 2px solid transparent;
+  background: none;
+  padding: 0;
+  width: 56px;
+  height: 42px;
+  flex: none;
+  cursor: pointer;
+  overflow: hidden;
+  border-radius: 2px;
+}
+
+.modal-thumb.active {
+  border-color: var(--red);
+}
+
+.modal-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.modal-details {
+  padding: 39px 35px;
+}
+
+.modal-badge {
+  display: inline-block;
+  background: var(--red);
+  color: #fff;
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  padding: 6px 8px;
+  margin-bottom: 14px;
+}
+
+.modal-details h2 {
+  font-size: 42px;
+}
+
+.modal-details .vehicle-sub {
+  margin-bottom: 25px;
+}
+
+.detail-list {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 15px;
+  border-top: 1px solid #31343a;
+  border-bottom: 1px solid #31343a;
+  padding: 19px 0;
+  margin: 0 0 24px;
+}
+
+.detail-list dt {
+  color: var(--muted);
+  font-size: 10px;
+}
+
+.detail-list dd {
+  display: block;
+  color: #eee;
+  font-size: 12px;
+  margin: 4px 0 0;
+  font-weight: 700;
+}
+
+.modal-price {
+  margin-bottom: 22px;
+}
+
+.modal-price .vehicle-sub {
+  margin: 0 0 4px;
+  display: block;
+}
+
+.modal-details .price {
+  font-size: 28px;
+}
+
+.modal-details .btn {
+  width: 100%;
+  justify-content: center;
+}
+
+.modal-note {
+  font-size: 10px;
+  color: var(--muted-soft);
+  text-align: center;
+  margin: 11px 0 0;
+}
+
+/* ---------------------------------------------------------------------
+   11. Responsivo
+   ------------------------------------------------------------------ */
+
+@media (max-width: 980px) {
+  .vehicle-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .nav-wrap {
+    gap: 30px;
+  }
+
+  .main-nav {
+    gap: 22px;
+  }
+}
+
+@media (max-width: 800px) {
+  .container {
+    width: min(100% - 32px, 600px);
+  }
+
+  .topbar-right {
+    display: none;
+  }
+
+  .site-header {
+    height: 68px;
+  }
+
+  .header-whatsapp {
+    display: none;
+  }
+
+  .menu-toggle {
+    display: block;
+    margin-left: auto;
+  }
+
+  .brand img {
+    width: 150px;
+  }
+
+  /* Menu mobile: painel que desce do cabeçalho.
+     Antes o botão ☰ não tinha nenhum comportamento e a navegação
+     ficava inacessível no celular. */
+  .main-nav {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    display: none;
+    flex-direction: column;
+    gap: 0;
+    background: #0b0c0ffa;
+    border-bottom: 1px solid #202226;
+    padding: 8px 0;
+    font-size: 15px;
+  }
+
+  .main-nav.open {
+    display: flex;
+  }
+
+  .main-nav a {
+    padding: 15px 24px;
+    border-bottom: 1px solid #17191d;
+  }
+
+  .main-nav a:last-child {
+    border-bottom: 0;
+  }
+
+  .hero-grid {
+    height: auto;
+    min-height: 560px;
+    display: block;
+    padding-top: 75px;
+  }
+
+  .hero-copy h1 {
+    font-size: 62px;
+  }
+
+  .hero-visual {
+    height: 260px;
+    margin-top: -15px;
+  }
+
+  .hero-visual img {
+    width: 130%;
+    height: 100%;
+  }
+
+  .hero-tag {
+    right: 4px;
+    bottom: 0;
+  }
+
+  .hero-bottom {
+    height: auto;
+    padding: 25px 0;
+    gap: 20px;
+    justify-content: space-between;
+  }
+
+  .hero-bottom div {
+    display: block;
+  }
+
+  .hero-bottom strong {
+    font-size: 25px;
+    display: block;
+  }
+
+  .hero-bottom span {
+    font-size: 9px;
+  }
+
+  .section-heading {
+    display: block;
+  }
+
+  .section-heading h2,
+  .trust-section h2,
+  .contact-card h2 {
+    font-size: 43px;
+  }
+
+  .text-link {
+    margin-top: 20px;
+    padding: 0;
+  }
+
+  .catalog-toolbar {
+    display: block;
+  }
+
+  .search-box {
+    width: 100%;
+    margin-bottom: 10px;
+  }
+
+  .filters {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .filters select:last-child {
+    grid-column: span 2;
+  }
+
+  .category-wrap {
+    display: block;
+  }
+
+  .category-row {
+    gap: 19px;
+  }
+
+  .fav-toggle {
+    margin: 0 0 14px;
+    width: 100%;
+  }
+
+  .vehicle-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .trust-grid {
+    display: block;
+  }
+
+  .trust-items {
+    margin-top: 45px;
+  }
+
+  .contact-card {
+    display: block;
+  }
+
+  .contact-card .btn {
+    margin-top: 28px;
+  }
+
+  .footer-inner {
+    height: auto;
+    padding: 25px 0;
+    gap: 18px;
+    flex-wrap: wrap;
+  }
+
+  .footer-inner span:last-child {
+    width: 100%;
+  }
+
+  .modal-layout {
+    display: block;
+  }
+
+  .modal-media > img {
+    height: 230px;
+    min-height: 0;
+  }
+
+  .modal-details {
+    padding: 25px;
+  }
+
+  .modal-details h2 {
+    font-size: 37px;
+  }
+}
+
+/* ---------------------------------------------------------------------
+   12. Movimento reduzido / impressão
+   ------------------------------------------------------------------ */
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  .vehicle-card:hover,
+  .vehicle-card:focus-visible,
+  .btn-primary:hover {
+    transform: none;
+  }
+
+  .vehicle-card:hover .vehicle-image img {
+    transform: none;
+  }
+}
+
+@media print {
+  .topbar,
+  .site-header,
+  .hero-visual,
+  .catalog-toolbar,
+  .category-wrap,
+  .contact-section,
+  .modal-backdrop,
+  .skip-link {
+    display: none !important;
+  }
+
+  body {
+    background: #fff;
+    color: #000;
+  }
+}

@@ -1,29 +1,343 @@
 <!doctype html>
 <html lang="pt-BR">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="description" content="Catálogo de veículos Autobayer Veículos." />
-  <title>Autobayer Veículos | Seu próximo carro está aqui</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css" />
-</head>
-<body>
-  <div class="topbar"><div class="container topbar-inner"><span>Compra, venda e troca com confiança</span><span class="topbar-right">Atendimento: Seg–Sex, 8h às 18h <i></i> (11) 99999-0000</span></div></div>
-  <header class="site-header"><div class="container nav-wrap">
-    <a class="brand" href="#inicio" aria-label="Autobayer Veículos início"><img src="AUTOBAYER TOP.png" alt="Autobayer Veículos"></a>
-    <nav class="main-nav" aria-label="Navegação principal"><a href="#inicio">Início</a><a href="#estoque">Estoque</a><a href="#sobre">A Autobayer</a><a href="#contato">Contato</a></nav>
-    <a class="header-whatsapp" href="https://wa.me/5511999990000" target="_blank" rel="noreferrer"><span class="wa-icon">◔</span> Fale conosco</a><button class="menu-toggle" aria-label="Abrir menu">☰</button>
-  </div></header>
-  <main>
-    <section class="hero" id="inicio"><div class="hero-grid container"><div class="hero-copy"><p class="eyebrow"><span></span> O SEU PRÓXIMO CARRO ESTÁ AQUI</p><h1>Escolha seu<br><em>próximo destino.</em></h1><p class="hero-text">Veículos selecionados, revisados e prontos para você. Encontre o carro ideal para cada momento da sua vida.</p><a href="#estoque" class="btn btn-primary">Ver veículos disponíveis <b>↗</b></a></div><div class="hero-visual"><div class="hero-glow"></div><img src="https://images.unsplash.com/photo-1552519507-da3b142c6e3d?auto=format&fit=crop&w=1300&q=85" alt="Carro esportivo preto em destaque"><div class="hero-tag"><strong>+10</strong><span>anos realizando<br>bons negócios</span></div></div></div><div class="hero-bottom container"><div><strong>+500</strong><span>clientes satisfeitos</span></div><div><strong>+40</strong><span>veículos no estoque</span></div><div><strong>100%</strong><span>procedência garantida</span></div></div></section>
-    <section class="catalog-section" id="estoque"><div class="container"><div class="section-heading"><div><p class="eyebrow"><span></span> ESTOQUE AUTOBAYER</p><h2>Encontre o carro <em>que combina com você.</em></h2></div><button class="text-link" id="clearFilters">Limpar filtros <span>↻</span></button></div><div class="catalog-toolbar"><div class="search-box"><span>⌕</span><input id="searchInput" type="search" placeholder="Busque por marca, modelo..." /></div><div class="filters"><select id="typeFilter"><option value="all">Todos os tipos</option><option value="SUV">SUV</option><option value="Sedan">Sedan</option><option value="Hatch">Hatch</option><option value="Picape">Picape</option></select><select id="priceFilter"><option value="all">Qualquer preço</option><option value="80">Até R$ 80 mil</option><option value="150">Até R$ 150 mil</option><option value="250">Até R$ 250 mil</option></select><select id="sortFilter"><option value="featured">Destaques</option><option value="lower">Menor preço</option><option value="higher">Maior preço</option></select></div></div><div class="category-row"><button class="category active" data-category="all">Todos <small>06</small></button><button class="category" data-category="SUV">SUV <small>02</small></button><button class="category" data-category="Sedan">Sedan <small>02</small></button><button class="category" data-category="Hatch">Hatch <small>01</small></button><button class="category" data-category="Picape">Picape <small>01</small></button></div><div class="vehicle-grid" id="vehicleGrid"></div><div class="empty-state" id="emptyState">Nenhum veículo encontrado. Tente ajustar os filtros.</div></div></section>
-    <section class="trust-section" id="sobre"><div class="container trust-grid"><div><p class="eyebrow"><span></span> POR QUE A AUTOBAYER?</p><h2>Negócio bom é<br><em>negócio tranquilo.</em></h2></div><div class="trust-items"><div class="trust-item"><b>01</b><div><h3>Procedência garantida</h3><p>Todos os nossos veículos passam por uma avaliação criteriosa.</p></div></div><div class="trust-item"><b>02</b><div><h3>Financiamento fácil</h3><p>As melhores condições para você sair de carro novo hoje.</p></div></div><div class="trust-item"><b>03</b><div><h3>Atendimento humano</h3><p>Consultores especialistas prontos para ajudar você.</p></div></div></div></div></section>
-    <section class="contact-section" id="contato"><div class="container contact-card"><div><p class="eyebrow"><span></span> VAMOS CONVERSAR?</p><h2>Seu carro novo<br><em>começa aqui.</em></h2></div><a class="btn btn-primary" href="https://wa.me/5511999990000?text=Olá!%20Vi%20o%20catálogo%20da%20Autobayer%20e%20quero%20encontrar%20meu%20próximo%20carro." target="_blank" rel="noreferrer">Chamar no WhatsApp <b>↗</b></a></div></section>
-  </main>
-  <footer><div class="container footer-inner"><img src="AUTOBAYER TOP.png" alt="Autobayer Veículos"><span>© 2024 Autobayer Veículos. Todos os direitos reservados.</span><span>São Paulo, SP</span></div></footer>
-  <div class="modal-backdrop" id="modalBackdrop"><div class="vehicle-modal" role="dialog" aria-modal="true"><button class="modal-close" id="modalClose" aria-label="Fechar">×</button><div id="modalContent"></div></div></div>
-  <script src="app.js"></script>
-</body></html>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Autobayer Veículos | Seminovos revisados em São Paulo</title>
+    <meta
+      name="description"
+      content="Catálogo de seminovos da Autobayer Veículos: SUVs, sedãs, hatches e picapes revisados, com procedência garantida e financiamento facilitado. Fale conosco pelo WhatsApp."
+    />
+    <meta name="theme-color" content="#090a0c" />
+
+    <!-- TODO: ajuste o domínio em js/config.js e nas 3 URLs absolutas abaixo. -->
+    <link rel="canonical" href="https://www.autobayerveiculos.com.br/" />
+
+    <!-- Open Graph: define a prévia ao compartilhar o link no WhatsApp,
+         Instagram e Facebook. Sem isto, o link aparece "pelado". -->
+    <meta property="og:type" content="website" />
+    <meta property="og:locale" content="pt_BR" />
+    <meta property="og:site_name" content="Autobayer Veículos" />
+    <meta property="og:title" content="Autobayer Veículos | Seu próximo carro está aqui" />
+    <meta
+      property="og:description"
+      content="Seminovos selecionados e revisados, com procedência garantida. Encontre o carro ideal para cada momento da sua vida."
+    />
+    <meta property="og:url" content="https://www.autobayerveiculos.com.br/" />
+    <meta
+      property="og:image"
+      content="https://www.autobayerveiculos.com.br/assets/og-autobayer.jpg"
+    />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="Autobayer Veículos — catálogo de seminovos" />
+    <meta name="twitter:card" content="summary_large_image" />
+
+    <link rel="icon" href="assets/favicon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" sizes="180x180" href="assets/apple-touch-icon.png" />
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="preconnect" href="https://images.unsplash.com" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=DM+Sans:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="css/styles.css" />
+
+    <!-- Dados do negócio para o Google (Rich Results / Perfil da Empresa). -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "AutoDealer",
+        "name": "Autobayer Veículos",
+        "description": "Compra, venda e troca de veículos seminovos com procedência garantida.",
+        "url": "https://www.autobayerveiculos.com.br/",
+        "logo": "https://www.autobayerveiculos.com.br/assets/logo-autobayer.png",
+        "image": "https://www.autobayerveiculos.com.br/assets/og-autobayer.jpg",
+        "telephone": "+5511999990000",
+        "priceRange": "R$$",
+        "address": {
+          "@type": "PostalAddress",
+          "streetAddress": "Av. Exemplo, 1000",
+          "addressLocality": "São Paulo",
+          "addressRegion": "SP",
+          "postalCode": "01000-000",
+          "addressCountry": "BR"
+        },
+        "openingHoursSpecification": [
+          {
+            "@type": "OpeningHoursSpecification",
+            "dayOfWeek": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
+            "opens": "08:00",
+            "closes": "18:00"
+          }
+        ]
+      }
+    </script>
+  </head>
+
+  <body>
+    <a class="skip-link" href="#estoque">Pular para o estoque</a>
+
+    <div class="topbar">
+      <div class="container topbar-inner">
+        <span>Compra, venda e troca com confiança</span>
+        <span class="topbar-right">
+          Atendimento: Seg–Sex, 8h às 18h
+          <i aria-hidden="true"></i>
+          <!-- fallback sem JS: o número real vive em js/config.js -->
+          <a data-phone-link href="tel:+5511999990000"
+            ><span data-phone-text>(11) 99999-0000</span></a
+          >
+        </span>
+      </div>
+    </div>
+
+    <header class="site-header">
+      <div class="container nav-wrap">
+        <a class="brand" href="#inicio" aria-label="Autobayer Veículos — início">
+          <picture>
+            <source srcset="assets/logo-autobayer.webp" type="image/webp" />
+            <img
+              src="assets/logo-autobayer.png"
+              alt="Autobayer Veículos"
+              width="430"
+              height="160"
+              fetchpriority="high"
+            />
+          </picture>
+        </a>
+
+        <nav class="main-nav" id="mainNav" aria-label="Navegação principal">
+          <a href="#inicio">Início</a>
+          <a href="#estoque">Estoque</a>
+          <a href="#sobre">A Autobayer</a>
+          <a href="#contato">Contato</a>
+        </nav>
+
+        <a
+          class="header-whatsapp"
+          data-wa-link
+          data-cta="whatsapp-header"
+          href="https://wa.me/5511999990000"
+          target="_blank"
+          rel="noopener"
+        >
+          <span class="wa-icon" aria-hidden="true">✆</span> Fale conosco
+        </a>
+
+        <button
+          class="menu-toggle"
+          id="menuToggle"
+          type="button"
+          aria-label="Abrir menu"
+          aria-expanded="false"
+          aria-controls="mainNav"
+        >
+          <span aria-hidden="true">☰</span>
+        </button>
+      </div>
+    </header>
+
+    <main>
+      <section class="hero" id="inicio">
+        <div class="hero-grid container">
+          <div class="hero-copy">
+            <p class="eyebrow"><span aria-hidden="true"></span> O SEU PRÓXIMO CARRO ESTÁ AQUI</p>
+            <h1>Escolha seu<br /><em>próximo destino.</em></h1>
+            <p class="hero-text">
+              Veículos selecionados, revisados e prontos para você. Encontre o carro ideal para cada
+              momento da sua vida.
+            </p>
+            <a href="#estoque" class="btn btn-primary">
+              Ver veículos disponíveis <b aria-hidden="true">↗</b>
+            </a>
+          </div>
+
+          <div class="hero-visual">
+            <div class="hero-glow" aria-hidden="true"></div>
+            <img
+              src="https://images.unsplash.com/photo-1552519507-da3b142c6e3d?auto=format&fit=crop&w=1300&q=85"
+              alt=""
+              width="1300"
+              height="867"
+              fetchpriority="high"
+              decoding="async"
+            />
+            <div class="hero-tag">
+              <strong>+10</strong><span>anos realizando<br />bons negócios</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="hero-bottom container">
+          <div><strong>+500</strong><span>clientes satisfeitos</span></div>
+          <div><strong>+40</strong><span>veículos no estoque</span></div>
+          <div><strong>100%</strong><span>procedência garantida</span></div>
+        </div>
+      </section>
+
+      <section class="catalog-section" id="estoque">
+        <div class="container">
+          <div class="section-heading">
+            <div>
+              <p class="eyebrow"><span aria-hidden="true"></span> ESTOQUE AUTOBAYER</p>
+              <h2>Encontre o carro <em>que combina com você.</em></h2>
+            </div>
+            <button class="text-link" id="clearFilters" type="button">
+              Limpar filtros <span aria-hidden="true">↻</span>
+            </button>
+          </div>
+
+          <div class="catalog-toolbar">
+            <div class="search-box">
+              <span class="search-icon" aria-hidden="true">⌕</span>
+              <label class="visually-hidden" for="searchInput">Buscar veículo</label>
+              <input id="searchInput" type="search" placeholder="Busque por marca, modelo..." />
+            </div>
+
+            <div class="filters">
+              <label class="visually-hidden" for="brandFilter">Filtrar por marca</label>
+              <select id="brandFilter">
+                <option value="all">Todas as marcas</option>
+                <!-- demais marcas são geradas a partir de js/vehicles.js -->
+              </select>
+
+              <label class="visually-hidden" for="priceFilter">Filtrar por preço</label>
+              <select id="priceFilter">
+                <option value="all">Qualquer preço</option>
+                <option value="80000">Até R$ 80 mil</option>
+                <option value="150000">Até R$ 150 mil</option>
+                <option value="250000">Até R$ 250 mil</option>
+              </select>
+
+              <label class="visually-hidden" for="sortFilter">Ordenar por</label>
+              <select id="sortFilter">
+                <option value="featured">Destaques</option>
+                <option value="lower">Menor preço</option>
+                <option value="higher">Maior preço</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="category-wrap">
+            <!-- Abas geradas a partir do estoque, com contagem automática. -->
+            <div
+              class="category-row"
+              id="categoryRow"
+              role="group"
+              aria-label="Filtrar por tipo"
+            ></div>
+            <button class="fav-toggle" id="favToggle" type="button" aria-pressed="false" hidden>
+              <span aria-hidden="true">♥</span> Favoritos <span id="favCount"></span>
+            </button>
+          </div>
+
+          <p class="visually-hidden" id="resultCount" role="status" aria-live="polite"></p>
+
+          <div class="vehicle-grid" id="vehicleGrid"></div>
+
+          <p class="empty-state" id="emptyState" hidden>
+            Nenhum veículo encontrado. Tente ajustar os filtros.
+          </p>
+
+          <noscript>
+            <p class="empty-state">
+              Ative o JavaScript para ver o estoque, ou fale direto conosco pelo WhatsApp
+              <a href="https://wa.me/5511999990000">(11) 99999-0000</a>.
+            </p>
+          </noscript>
+        </div>
+      </section>
+
+      <section class="trust-section" id="sobre">
+        <div class="container trust-grid">
+          <div>
+            <p class="eyebrow"><span aria-hidden="true"></span> POR QUE A AUTOBAYER?</p>
+            <h2>Negócio bom é<br /><em>negócio tranquilo.</em></h2>
+          </div>
+          <div class="trust-items">
+            <div class="trust-item">
+              <b aria-hidden="true">01</b>
+              <div>
+                <h3>Procedência garantida</h3>
+                <p>Todos os nossos veículos passam por uma avaliação criteriosa.</p>
+              </div>
+            </div>
+            <div class="trust-item">
+              <b aria-hidden="true">02</b>
+              <div>
+                <h3>Financiamento fácil</h3>
+                <p>As melhores condições para você sair de carro novo hoje.</p>
+              </div>
+            </div>
+            <div class="trust-item">
+              <b aria-hidden="true">03</b>
+              <div>
+                <h3>Atendimento humano</h3>
+                <p>Consultores especialistas prontos para ajudar você.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="contact-section" id="contato">
+        <div class="container contact-card">
+          <div>
+            <p class="eyebrow"><span aria-hidden="true"></span> VAMOS CONVERSAR?</p>
+            <h2>Seu carro novo<br /><em>começa aqui.</em></h2>
+          </div>
+          <a
+            class="btn btn-primary"
+            data-wa-link
+            data-cta="whatsapp-contato"
+            href="https://wa.me/5511999990000"
+            target="_blank"
+            rel="noopener"
+          >
+            Chamar no WhatsApp <b aria-hidden="true">↗</b>
+          </a>
+        </div>
+      </section>
+    </main>
+
+    <footer>
+      <div class="container footer-inner">
+        <picture>
+          <source srcset="assets/logo-autobayer.webp" type="image/webp" />
+          <img
+            src="assets/logo-autobayer.png"
+            alt="Autobayer Veículos"
+            width="430"
+            height="160"
+            loading="lazy"
+          />
+        </picture>
+        <span>© <span data-year>2026</span> Autobayer Veículos. Todos os direitos reservados.</span>
+        <span>São Paulo, SP</span>
+      </div>
+    </footer>
+
+    <div class="modal-backdrop" id="modalBackdrop">
+      <div
+        class="vehicle-modal"
+        id="vehicleModal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="modalTitle"
+      >
+        <button class="modal-close" id="modalClose" type="button" aria-label="Fechar detalhes">
+          <span aria-hidden="true">×</span>
+        </button>
+        <div id="modalContent"></div>
+      </div>
+    </div>
+
+    <!-- defer nos três: não bloqueiam o parse e a ordem é preservada. -->
+    <script src="js/config.js" defer></script>
+    <script src="js/vehicles.js" defer></script>
+    <script src="js/app.js" defer></script>
+  </body>
+</html>

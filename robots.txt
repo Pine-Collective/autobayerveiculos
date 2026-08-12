@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://www.autobayerveiculos.com.br/sitemap.xml

@@ -1,0 +1,20 @@
+{
+  "name": "autobayer-veiculos",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Site institucional e catálogo de estoque da Autobayer Veículos.",
+  "scripts": {
+    "dev": "npx --yes serve . -l 3000",
+    "format": "prettier --write \"**/*.{html,css,js,json,md}\"",
+    "format:check": "prettier --check \"**/*.{html,css,js,json,md}\"",
+    "test": "node scripts/smoke-test.mjs",
+    "sitemap": "node scripts/build-sitemap.mjs",
+    "images": "node scripts/build-images.mjs",
+    "build": "npm run sitemap && npm run images"
+  },
+  "devDependencies": {
+    "jsdom": "^30.0.1",
+    "prettier": "^3.4.2",
+    "sharp": "^0.35.3"
+  }
+}
