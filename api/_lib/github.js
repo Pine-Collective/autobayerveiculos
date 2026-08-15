@@ -76,6 +76,9 @@ export async function gravarArquivo({ caminho, conteudo, sha, mensagem }) {
       ? conteudo.toString('base64')
       : Buffer.from(conteudo, 'utf8').toString('base64'),
     branch,
+    // Identifica os commits do painel no histórico — sem isto eles sairiam
+    // em nome do dono do token, indistinguíveis do trabalho manual.
+    committer: { name: 'Painel Autobayer', email: 'painel-autobayer@users.noreply.github.com' },
     ...(sha ? { sha } : {})
   };
 
@@ -85,4 +88,25 @@ export async function gravarArquivo({ caminho, conteudo, sha, mensagem }) {
   });
 
   return { sha: dados.content.sha, commit: dados.commit.sha };
+}
+
+/**
+ * Última alteração de um arquivo — usada para dizer ao usuário QUEM/QUANDO
+ * publicou quando a gravação dele conflita (409).
+ */
+export async function ultimoCommit(caminho) {
+  const { repo, branch } = configuracao();
+  const commits = await requisicao(
+    `/repos/${repo}/commits?path=${encodeURIComponent(caminho)}&sha=${encodeURIComponent(branch)}&per_page=1`
+  );
+  if (!Array.isArray(commits) || !commits[0]) return null;
+  return {
+    mensagem: commits[0].commit.message,
+    data: commits[0].commit.committer?.date || null
+  };
+}
+
+/** True quando o erro veio do GitHub recusando o token (vencido/sem permissão). */
+export function tokenRecusado(error) {
+  return error && (error.status === 401 || error.status === 403);
 }

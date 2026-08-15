@@ -1,0 +1,42 @@
+# Roda a suíte inteira a cada push — antes, os testes só existiam na máquina
+# de quem desenvolvia; o painel publica direto na main e nada conferia nada.
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  testes:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # Histórico completo para o lastmod do sitemap sair verdadeiro.
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - run: npm ci
+
+      - name: Formatação
+        run: npm run format:check
+
+      - name: Testes unitários (site + painel + CSS)
+        run: npm test
+
+      - name: Build de produção
+        run: npm run build
+
+      - name: Testes do artefato de deploy
+        run: node scripts/smoke-test.mjs public
+
+      - name: Instalar navegador do Playwright
+        run: npx playwright install --with-deps chromium
+
+      - name: Testes de navegador real (e2e)
+        run: npx playwright test -c scripts/e2e/playwright.config.mjs

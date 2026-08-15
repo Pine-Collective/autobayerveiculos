@@ -6,7 +6,7 @@
  * evita depender de biblioteca de imagem na função.
  */
 import { exigirLogin } from './_lib/auth.js';
-import { gravarArquivo } from './_lib/github.js';
+import { gravarArquivo, tokenRecusado } from './_lib/github.js';
 
 const PASTA = 'assets/veiculos';
 const TAMANHO_MAXIMO = 2 * 1024 * 1024; // 2 MB já comprimido é bastante
@@ -73,6 +73,13 @@ export default async function handler(req, res) {
 
     return res.status(200).json({ caminho });
   } catch (error) {
+    if (tokenRecusado(error)) {
+      return res.status(502).json({
+        erro:
+          'O GitHub recusou o acesso — o token provavelmente venceu. ' +
+          'Renove seguindo o ADMIN.md, seção "Renovar o token".'
+      });
+    }
     console.error('Erro em /api/upload:', error);
     return res.status(500).json({ erro: 'Não foi possível enviar a foto. Tente de novo.' });
   }

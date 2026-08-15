@@ -17,35 +17,40 @@ carregados por `<script>`, não por `fetch`, justamente para não depender de se
 ## Estrutura
 
 ```
-index.html              única página do site
+index.html              única página do site (com placeholders que o build resolve)
 data/vehicles.json      o estoque — fonte da verdade
 css/styles.css          estilos (seções numeradas no topo do arquivo)
-js/config.js            telefone, WhatsApp, endereço, domínio, ID do GA4
+js/config.js            telefone, WhatsApp, endereço, DOMÍNIO, ID do GA4
 js/app.js               catálogo, filtros, modal, favoritos
 js/vehicles.js          GERADO a partir do JSON — fora do Git
 admin/                  painel do estoque (ver ADMIN.md)
+admin/schema.js         GERADO de lib/vehicle-schema.mjs — fora do Git
 api/                    funções serverless que gravam no GitHub
-lib/vehicle-schema.mjs  validação, usada pelo build e pela API
+lib/vehicle-schema.mjs  validação e regras de slug (build + API + painel)
 assets/                 logo, favicon, imagem de compartilhamento
-scripts/                build, geradores e testes
+scripts/                build, geradores, testes unitários e e2e/
+vercel.json             headers de segurança/cache e diretório de saída
 public/                 saída do build (gerada; fora do Git)
 ```
 
 ## Publicação
 
-O deploy é automático a cada push na `main`.
+O deploy é automático a cada push na `main` — e o CI (GitHub Actions) roda a
+suíte inteira em cada push, incluindo os testes de navegador real.
 
 ```bash
-npm run build       # gera sitemap + imagens e monta public/
+npm run build       # gera dados + sitemap + imagens e monta public/
 npm run test:build  # faz o build e roda os testes contra public/
+npm run test:e2e    # build + Chromium de verdade contra o public/
 ```
 
-`public/` é o diretório de saída padrão do Vercel, Netlify e Cloudflare Pages —
-não é preciso configurar nada no painel. Ficam de fora do que é publicado:
-`node_modules`, `scripts/`, `package.json` e os arquivos de configuração.
+O build também injeta no `public/` o **domínio** (de `js/config.js`, campo
+`siteUrl`) em canonical/Open Graph/robots/sitemap, e o **JSON-LD do estoque**
+no HTML. Quando o domínio próprio for registrado, troque só o `siteUrl`.
 
-Se algum dia o build for removido, lembre de apontar o Output Directory do
-provedor para a raiz do projeto.
+`public/` é o diretório de saída padrão do Vercel (pinado em `vercel.json`).
+Ficam de fora do que é publicado: `node_modules`, `scripts/`, `package.json`
+e os arquivos de configuração.
 
 ## Painel do estoque
 
@@ -87,30 +92,32 @@ Isso regenera o WebP leve e a imagem de compartilhamento (`og-autobayer.jpg`).
 
 ```bash
 npm run format
-npm test             # 153 verificações: 75 do site + 78 do painel
+npm test             # unitários: site + painel + consistência de CSS
 npm run test:build   # faz o build e testa o public/ que vai para produção
+npm run test:e2e     # Chromium de verdade contra o public/ (pega o que o jsdom não vê)
 ```
 
-## Antes de publicar
+## Pendências de lançamento
 
 - [ ] Trocar o telefone/WhatsApp placeholder (`5511999990000`) em `js/config.js`
 - [ ] Preencher o endereço real em `js/config.js` e no JSON-LD de `index.html`
-- [ ] Trocar o domínio (`siteUrl` em `config.js`, `canonical` + Open Graph em
-      `index.html`, `robots.txt`) e rodar `npm run sitemap`
+- [ ] Registrar o domínio próprio e trocar **uma linha**: `siteUrl` em
+      `js/config.js` (o build propaga para canonical, OG, robots e sitemap)
 - [ ] Substituir as fotos do Unsplash pelas fotos reais do estoque
-      (agora dá para fazer pelo painel, em `/admin/`)
+      (pelo painel, em `/admin/` — elas já saem comprimidas em WebP)
 - [ ] Preencher `ga4Id` em `js/config.js` para ligar o Google Analytics
 - [ ] Cadastrar o site no Google Search Console e enviar o `sitemap.xml`
 - [ ] Configurar as variáveis de ambiente do painel — ver [ADMIN.md](ADMIN.md)
 
 ## Eventos de analytics já instrumentados
 
-Disparam para `dataLayer` e para o GA4 quando `ga4Id` estiver configurado:
+Com `ga4Id` configurado vão para o GA4; sem ele, para o `dataLayer` (GTM):
 
-| Evento            | Quando                            |
-| ----------------- | --------------------------------- |
-| `view_vehicle`    | abre os detalhes de um veículo    |
-| `click_whatsapp`  | clica em qualquer CTA de WhatsApp |
-| `filter_type`     | filtra por tipo de veículo        |
-| `add_favorite`    | favorita um veículo               |
-| `remove_favorite` | desfavorita um veículo            |
+| Evento            | Quando                                      |
+| ----------------- | ------------------------------------------- |
+| `view_vehicle`    | abre os detalhes de um veículo              |
+| `click_whatsapp`  | clica em qualquer CTA de WhatsApp           |
+| `filter_type`     | filtra por tipo de veículo                  |
+| `add_favorite`    | favorita um veículo                         |
+| `remove_favorite` | desfavorita um veículo                      |
+| `deep_link_morto` | link compartilhado de carro fora do estoque |

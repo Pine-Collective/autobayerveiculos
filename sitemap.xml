@@ -1,43 +1,43 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
-    <loc>https://www.autobayerveiculos.com.br/</loc>
+    <loc>https://autobayerveiculos.vercel.app/</loc>
     <lastmod>2026-08-15</lastmod>
     <changefreq>daily</changefreq>
     <priority>1.0</priority>
   </url>
   <url>
-    <loc>https://www.autobayerveiculos.com.br/?veiculo=jeep-compass-limited-2022</loc>
+    <loc>https://autobayerveiculos.vercel.app/?veiculo=jeep-compass-limited-2022</loc>
     <lastmod>2026-08-15</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://www.autobayerveiculos.com.br/?veiculo=toyota-corolla-xei-2021</loc>
+    <loc>https://autobayerveiculos.vercel.app/?veiculo=toyota-corolla-xei-2021</loc>
     <lastmod>2026-08-15</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://www.autobayerveiculos.com.br/?veiculo=volkswagen-t-cross-highline-2023</loc>
+    <loc>https://autobayerveiculos.vercel.app/?veiculo=volkswagen-t-cross-highline-2023</loc>
     <lastmod>2026-08-15</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://www.autobayerveiculos.com.br/?veiculo=honda-civic-touring-2020</loc>
+    <loc>https://autobayerveiculos.vercel.app/?veiculo=honda-civic-touring-2020</loc>
     <lastmod>2026-08-15</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://www.autobayerveiculos.com.br/?veiculo=chevrolet-onix-premier-2022</loc>
+    <loc>https://autobayerveiculos.vercel.app/?veiculo=chevrolet-onix-premier-2022</loc>
     <lastmod>2026-08-15</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://www.autobayerveiculos.com.br/?veiculo=ford-ranger-limited-2021</loc>
+    <loc>https://autobayerveiculos.vercel.app/?veiculo=ford-ranger-limited-2021</loc>
     <lastmod>2026-08-15</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>

@@ -194,6 +194,11 @@ img {
   color: #fff;
 }
 
+/* Telefone dentro do menu: só existe visualmente no painel mobile. */
+.nav-phone {
+  display: none;
+}
+
 .header-whatsapp {
   margin-left: 20px;
   border: 1px solid #35373d;
@@ -599,9 +604,30 @@ select option {
 }
 
 .vehicle-card:hover,
-.vehicle-card:focus-visible {
+.vehicle-card:has(.vehicle-link:focus-visible) {
   transform: translateY(-5px);
   border-color: #484b51;
+}
+
+/* O link do título "estica" sobre o card inteiro: um <a> de verdade dá
+   teclado, leitor de tela e clique do meio de graça — sem role="button". */
+.vehicle-link {
+  color: inherit;
+}
+
+.vehicle-link::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+}
+
+.vehicle-link:focus-visible {
+  outline: none; /* o destaque de foco vai no card inteiro, via :has acima */
+}
+
+/* O coração fica ACIMA do link esticado para continuar clicável. */
+.heart {
+  z-index: 1;
 }
 
 .vehicle-card.is-sold {
@@ -731,6 +757,23 @@ select option {
   text-align: center;
   padding: 60px 20px;
   font-size: 14px;
+}
+
+/* Aviso de deep link para veículo que saiu do estoque. */
+.link-aviso {
+  background: #10202e;
+  border: 1px solid #1f4a6b;
+  color: #8ecbf0;
+  border-radius: 4px;
+  padding: 13px 16px;
+  font-size: 13px;
+  line-height: 1.6;
+  margin: 0 0 18px;
+}
+
+.link-aviso a {
+  color: #fff;
+  text-decoration: underline;
 }
 
 .empty-state a {
@@ -1085,6 +1128,17 @@ footer {
 
   .main-nav a:last-child {
     border-bottom: 0;
+  }
+
+  .nav-phone {
+    display: block;
+    color: #fff;
+    font-weight: 700;
+  }
+
+  .nav-phone span[aria-hidden] {
+    color: #25d366;
+    margin-right: 4px;
   }
 
   .hero-grid {

@@ -1,24 +1,32 @@
 /**
  * Painel do estoque — Autobayer Veículos.
  *
- * Fluxo: edita aqui -> "Publicar" grava data/vehicles.json no GitHub ->
- * o Vercel reconstrói o site sozinho.
+ * Fluxo: edita aqui -> "Publicar" envia as fotos novas e grava
+ * data/vehicles.json no GitHub -> o Vercel reconstrói o site sozinho.
+ *
+ * As fotos NÃO sobem na hora da escolha: ficam no navegador (comprimidas em
+ * WebP) e só são enviadas junto do "Publicar". Cancelou o cadastro? Nada
+ * ficou para trás no repositório.
  *
  * Nada de senha ou token do GitHub roda neste arquivo: o navegador só guarda
  * um token de sessão temporário, e quem fala com o GitHub são as funções
  * em /api.
+ *
+ * Depende de /admin/schema.js (gerado de lib/vehicle-schema.mjs — a fonte
+ * única das listas de tipos/combustíveis e das regras de slug).
  */
 (function () {
   'use strict';
 
   const CHAVE_TOKEN = 'autobayer:admin:token';
 
-  /* Estes valores espelham lib/vehicle-schema.mjs. A API valida de novo do
-     lado do servidor — aqui é só para montar os menus e dar retorno rápido. */
-  const TIPOS = ['SUV', 'Sedan', 'Hatch', 'Picape'];
-  const COMBUSTIVEIS = ['Flex', 'Gasolina', 'Diesel', 'Etanol', 'Híbrido', 'Elétrico'];
-  const CAMBIOS = ['Automático', 'Manual', 'Automatizado', 'CVT'];
-  const SELOS = ['', 'Destaque', 'Oferta', 'Único dono', 'Novidade'];
+  const SCHEMA = window.AUTOBAYER_SCHEMA;
+  if (!SCHEMA) {
+    document.body.textContent =
+      'Arquivo /admin/schema.js não carregou. Rode "npm run data" e publique de novo.';
+    return;
+  }
+  const { TIPOS, COMBUSTIVEIS, CAMBIOS, SELOS, gerarSlug, slugUnico } = SCHEMA;
 
   const $ = (seletor) => document.querySelector(seletor);
 
@@ -34,6 +42,7 @@
     vehicles: [],
     sha: '',
     alterado: false,
+    carregado: false,
     editandoId: null
   };
 
@@ -50,22 +59,14 @@
 
   /**
    * O caminho guardado é sempre relativo à raiz ("assets/veiculos/x.webp"),
-   * porque quem consome é o index.html na raiz. Para exibir aqui dentro do
-   * painel usamos a barra inicial, que funciona tanto em /admin quanto em
-   * /admin/. Links completos (http) passam direto.
+   * porque quem consome é o index.html na raiz. Para exibir aqui usamos a
+   * barra inicial. Links completos (http) e pré-visualizações locais (data:)
+   * passam direto.
    */
   function urlExibicao(src) {
     if (!src) return '';
-    return /^(https?:)?\/\//.test(src) ? src : `/${src.replace(/^\/+/, '')}`;
-  }
-
-  function gerarSlug(brand, model, year) {
-    return `${brand} ${model} ${year}`
-      .normalize('NFD')
-      .replace(/\p{Diacritic}/gu, '')
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, '-')
-      .replace(/^-+|-+$/g, '');
+    if (src.startsWith('data:') || /^(https?:)?\/\//.test(src)) return src;
+    return `/${src.replace(/^\/+/, '')}`;
   }
 
   function mostrarFaixa(mensagem, tipo) {
@@ -110,17 +111,18 @@
       /* resposta sem corpo */
     }
 
-    // 401 vindo do próprio login significa senha errada, não sessão vencida —
-    // derrubar a sessão aqui trocaria "Senha incorreta" por uma mensagem
-    // confusa para quem só errou a digitação.
+    // 401 vindo do próprio login significa senha errada, não sessão vencida.
+    // Nos demais casos a sessão expirou — pede o login de novo SEM descartar
+    // o que está sendo editado (ver pedirNovoLogin).
     if (resposta.status === 401 && caminho !== 'login') {
-      sair(true);
-      throw new Error('Sessão expirada. Entre novamente.');
+      pedirNovoLogin();
+      throw new Error('Sessão expirada. Entre novamente — suas alterações continuam aqui.');
     }
     if (!resposta.ok) {
       const erro = new Error(dados.erro || `Falha na requisição (${resposta.status}).`);
       erro.problemas = dados.problemas;
       erro.status = resposta.status;
+      erro.corpo = dados;
       throw erro;
     }
 
@@ -148,7 +150,18 @@
       estado.token = token;
       sessionStorage.setItem(CHAVE_TOKEN, token);
       $('#senha').value = '';
-      await abrirPainel();
+
+      if (estado.carregado) {
+        // Sessão renovada no meio do trabalho: volta exatamente onde estava,
+        // sem re-buscar do servidor (o que apagaria as edições pendentes).
+        $('#telaLogin').hidden = true;
+        $('#painel').hidden = false;
+        if (estado.alterado) {
+          mostrarFaixa('Sessão renovada. Suas alterações continuam aqui — publique quando quiser.');
+        }
+      } else {
+        await abrirPainel();
+      }
     } catch (erro) {
       aviso.textContent = erro.message;
       aviso.hidden = false;
@@ -158,22 +171,40 @@
     }
   });
 
-  function sair(expirou) {
+  /**
+   * Sessão expirou no meio do uso: some com o painel mas PRESERVA todo o
+   * estado (veículos editados, fotos pendentes). Depois do novo login, o
+   * usuário volta para onde estava. Antes disto, uma sessão de 8h vencida
+   * descartava uma manhã inteira de cadastro sem aviso.
+   */
+  function pedirNovoLogin() {
     estado.token = '';
-    estado.alterado = false;
     sessionStorage.removeItem(CHAVE_TOKEN);
     $('#painel').hidden = true;
     $('#telaLogin').hidden = false;
-    if (expirou) {
-      const aviso = $('#avisoLogin');
-      aviso.textContent = 'Sua sessão expirou. Entre novamente.';
-      aviso.hidden = false;
-    }
+    const aviso = $('#avisoLogin');
+    aviso.textContent = estado.alterado
+      ? 'Sua sessão expirou. Entre de novo — suas alterações NÃO foram perdidas.'
+      : 'Sua sessão expirou. Entre novamente.';
+    aviso.hidden = false;
+  }
+
+  /** Saída manual: aqui sim o estado é zerado (com confirmação se houver pendências). */
+  function sair() {
+    estado.token = '';
+    estado.vehicles = [];
+    estado.sha = '';
+    estado.alterado = false;
+    estado.carregado = false;
+    sessionStorage.removeItem(CHAVE_TOKEN);
+    $('#painel').hidden = true;
+    $('#telaLogin').hidden = false;
+    $('#avisoLogin').hidden = true;
   }
 
   $('#botaoSair').addEventListener('click', () => {
     if (estado.alterado && !confirm('Há alterações não publicadas. Sair mesmo assim?')) return;
-    sair(false);
+    sair();
   });
 
   /* ------------------------------------------------------------------ */
@@ -190,6 +221,8 @@
       estado.vehicles = dados.vehicles;
       estado.sha = dados.sha;
       estado.alterado = false;
+      estado.carregado = true;
+      $('#faixaStatus').hidden = true;
       renderizar();
     } catch (erro) {
       $('#lista').innerHTML = `<li class="vazio">${escapar(erro.message)}</li>`;
@@ -273,7 +306,7 @@
   });
 
   /* ------------------------------------------------------------------ */
-  /* Editor                                                             */
+  /* Editor                                                              */
   /* ------------------------------------------------------------------ */
 
   let fotosEditor = [];
@@ -325,6 +358,7 @@
     atualizarDicas();
     renderizarGaleria();
     $('#avisoFormulario').hidden = true;
+    $('#colarLink').hidden = true;
     $('#modalEditor').hidden = false;
     $('#f-brand').focus();
   }
@@ -353,8 +387,8 @@
   function atualizarDicas() {
     const preco = Number(soDigitos($('#f-price').value));
     const km = Number(soDigitos($('#f-km').value));
-    $('#dicaPreco').textContent = preco ? brl.format(preco) : ' ';
-    $('#dicaKm').textContent = km ? `${numero.format(km)} km` : ' ';
+    $('#dicaPreco').textContent = preco ? brl.format(preco) : ' ';
+    $('#dicaKm').textContent = km ? `${numero.format(km)} km` : ' ';
   }
 
   ['#f-price', '#f-km'].forEach((seletor) => {
@@ -366,7 +400,7 @@
   });
 
   /* ------------------------------------------------------------------ */
-  /* Fotos                                                               */
+  /* Fotos — pré-visualização local; o envio acontece só no Publicar     */
   /* ------------------------------------------------------------------ */
 
   function renderizarGaleria() {
@@ -405,30 +439,82 @@
     }
   });
 
-  /**
-   * Reduz e comprime a imagem no próprio navegador antes de enviar.
+  /* --- Compressão no navegador ---------------------------------------
+   * Foto de celular tem 4–12 MB; aqui ela vira WebP de ~150 KB antes de
+   * qualquer envio — o repositório fica enxuto e o upload é rápido no 4G.
    *
-   * Foto de celular tem 4–12 MB; depois disso fica em torno de 150 KB. Isso
-   * mantém o repositório enxuto, o envio rápido no 4G do pátio e dispensa
-   * biblioteca de imagem no servidor. `imageOrientation` corrige fotos que
-   * sairiam deitadas por causa do EXIF.
+   * Fallbacks, na ordem:
+   *   - Safari < 15 não tem createImageBitmap(File) -> decodifica via <img>
+   *   - Safari não gera WebP no canvas -> re-encoda como JPEG (nunca PNG,
+   *     que para foto fica gigante)
+   *   - Se ainda passar do limite -> reduz qualidade e depois dimensão
    */
-  async function comprimir(arquivo, larguraMaxima = 1600, qualidade = 0.82) {
-    const bitmap = await createImageBitmap(arquivo, { imageOrientation: 'from-image' });
-    const escala = Math.min(1, larguraMaxima / bitmap.width);
 
-    const canvas = document.createElement('canvas');
-    canvas.width = Math.round(bitmap.width * escala);
-    canvas.height = Math.round(bitmap.height * escala);
-    canvas.getContext('2d').drawImage(bitmap, 0, 0, canvas.width, canvas.height);
-    bitmap.close();
+  const LIMITE_FOTO_BYTES = 1.8 * 1024 * 1024; // margem sob os 2 MB da API
 
-    const blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/webp', qualidade));
-    return await new Promise((resolve) => {
+  async function carregarImagem(arquivo) {
+    if (typeof createImageBitmap === 'function') {
+      try {
+        // from-image corrige fotos "deitadas" pela orientação EXIF.
+        return await createImageBitmap(arquivo, { imageOrientation: 'from-image' });
+      } catch {
+        /* cai para o <img> */
+      }
+    }
+    const url = URL.createObjectURL(arquivo);
+    try {
+      return await new Promise((resolve, reject) => {
+        const img = new Image();
+        img.onload = () => resolve(img);
+        img.onerror = () => reject(new Error('Não foi possível ler esta imagem.'));
+        img.src = url;
+      });
+    } finally {
+      URL.revokeObjectURL(url);
+    }
+  }
+
+  const paraBlob = (canvas, tipo, qualidade) =>
+    new Promise((resolve) => canvas.toBlob(resolve, tipo, qualidade));
+
+  const blobParaDataUrl = (blob) =>
+    new Promise((resolve) => {
       const leitor = new FileReader();
       leitor.onload = () => resolve(leitor.result);
       leitor.readAsDataURL(blob);
     });
+
+  async function comprimir(arquivo) {
+    const origem = await carregarImagem(arquivo);
+    const larguraOrigem = origem.naturalWidth || origem.width;
+    const alturaOrigem = origem.naturalHeight || origem.height;
+
+    let largura = Math.min(1600, larguraOrigem);
+    let qualidade = 0.82;
+
+    try {
+      for (let tentativa = 0; tentativa < 6; tentativa++) {
+        const canvas = document.createElement('canvas');
+        canvas.width = Math.max(1, largura);
+        canvas.height = Math.max(1, Math.round((alturaOrigem / larguraOrigem) * largura));
+        canvas.getContext('2d').drawImage(origem, 0, 0, canvas.width, canvas.height);
+
+        let blob = await paraBlob(canvas, 'image/webp', qualidade);
+        if (!blob || blob.type !== 'image/webp') {
+          blob = await paraBlob(canvas, 'image/jpeg', qualidade);
+        }
+
+        if (blob && blob.size <= LIMITE_FOTO_BYTES) {
+          return await blobParaDataUrl(blob);
+        }
+
+        if (qualidade > 0.6) qualidade -= 0.12;
+        else largura = Math.round(largura * 0.75);
+      }
+      throw new Error('A foto ficou grande demais mesmo depois de comprimida.');
+    } finally {
+      if (origem.close) origem.close();
+    }
   }
 
   $('#arquivoFoto').addEventListener('change', async function () {
@@ -439,35 +525,42 @@
     const progresso = $('#progressoUpload');
     progresso.hidden = false;
 
-    const base = gerarSlug($('#f-brand').value, $('#f-model').value, $('#f-year').value) || 'foto';
-
     for (let i = 0; i < arquivos.length; i++) {
-      progresso.textContent = `Enviando foto ${i + 1} de ${arquivos.length}...`;
+      progresso.textContent = `Otimizando foto ${i + 1} de ${arquivos.length}...`;
       try {
-        const dados = await comprimir(arquivos[i]);
-        const { caminho } = await api('upload', {
-          method: 'POST',
-          body: JSON.stringify({ nome: base, dados })
-        });
-        fotosEditor.push(caminho);
+        fotosEditor.push(await comprimir(arquivos[i]));
         renderizarGaleria();
       } catch (erro) {
-        progresso.textContent = `Erro ao enviar: ${erro.message}`;
+        progresso.textContent = `Erro na foto ${i + 1}: ${erro.message}`;
         return;
       }
     }
 
-    progresso.textContent = `${arquivos.length} foto(s) enviada(s).`;
-    setTimeout(() => {
-      progresso.hidden = true;
-    }, 3000);
+    progresso.textContent = `${arquivos.length} foto(s) prontas. Elas sobem quando você publicar.`;
   });
 
+  /* Colar link de imagem — campo inline no lugar do prompt() antigo */
+
   $('#botaoUrl').addEventListener('click', () => {
-    const url = prompt('Cole o endereço da imagem:');
-    if (url && url.trim()) {
-      fotosEditor.push(url.trim());
-      renderizarGaleria();
+    const caixa = $('#colarLink');
+    caixa.hidden = !caixa.hidden;
+    if (!caixa.hidden) $('#campoUrlFoto').focus();
+  });
+
+  $('#botaoAdicionarUrl').addEventListener('click', () => {
+    const campo = $('#campoUrlFoto');
+    const url = campo.value.trim();
+    if (!url) return;
+    fotosEditor.push(url);
+    campo.value = '';
+    $('#colarLink').hidden = true;
+    renderizarGaleria();
+  });
+
+  $('#campoUrlFoto').addEventListener('keydown', (evento) => {
+    if (evento.key === 'Enter') {
+      evento.preventDefault();
+      $('#botaoAdicionarUrl').click();
     }
   });
 
@@ -501,7 +594,14 @@
 
     const veiculo = {
       id: existente ? existente.id : Date.now(),
-      slug: existente ? existente.slug : gerarSlug(brand, model, year),
+      // Slug de carro novo já nasce único: dois "Compass 2022" viram
+      // ...-2022 e ...-2022-2, em vez de travarem a publicação.
+      slug: existente
+        ? existente.slug
+        : slugUnico(
+            gerarSlug(brand, model, year),
+            estado.vehicles.map((v) => v.slug)
+          ),
       brand,
       model,
       year,
@@ -551,12 +651,39 @@
   /* Publicar                                                            */
   /* ------------------------------------------------------------------ */
 
-  $('#botaoSalvar').addEventListener('click', async () => {
+  /** Sobe as fotos que ainda estão só no navegador (data:) e troca pelo caminho real. */
+  async function enviarFotosPendentes(aoProgredir) {
+    const pendentes = [];
+    estado.vehicles.forEach((veiculo) => {
+      veiculo.images.forEach((imagem, indice) => {
+        if (imagem.startsWith('data:')) pendentes.push({ veiculo, indice });
+      });
+    });
+
+    for (let n = 0; n < pendentes.length; n++) {
+      const { veiculo, indice } = pendentes[n];
+      aoProgredir(n + 1, pendentes.length);
+      const { caminho } = await api('upload', {
+        method: 'POST',
+        body: JSON.stringify({
+          nome: gerarSlug(veiculo.brand, veiculo.model, veiculo.year) || 'foto',
+          dados: veiculo.images[indice]
+        })
+      });
+      veiculo.images[indice] = caminho;
+    }
+  }
+
+  async function publicar() {
     const botao = $('#botaoSalvar');
     botao.disabled = true;
-    botao.textContent = 'Publicando...';
 
     try {
+      await enviarFotosPendentes((n, total) => {
+        botao.textContent = `Enviando foto ${n} de ${total}...`;
+      });
+
+      botao.textContent = 'Publicando...';
       const disponiveis = estado.vehicles.filter((v) => !v.sold).length;
       const { sha } = await api('vehicles', {
         method: 'PUT',
@@ -569,20 +696,67 @@
 
       estado.sha = sha;
       estado.alterado = false;
-      atualizarBotaoPublicar();
+      renderizar();
       mostrarFaixa(
         'Publicado. O site é reconstruído automaticamente e as mudanças aparecem em cerca de 1 minuto.',
         'sucesso'
       );
     } catch (erro) {
-      const detalhes = erro.problemas ? `\n\n${erro.problemas.join('\n')}` : '';
-      mostrarFaixa(erro.message + detalhes, 'erro');
       if (erro.status === 409) {
-        setTimeout(() => location.reload(), 4000);
+        mostrarConflito(erro);
+      } else {
+        const detalhes = erro.problemas ? ` ${erro.problemas.join(' · ')}` : '';
+        mostrarFaixa(erro.message + detalhes, 'erro');
       }
     } finally {
       botao.textContent = 'Publicar';
       atualizarBotaoPublicar();
+    }
+  }
+
+  $('#botaoSalvar').addEventListener('click', publicar);
+
+  /**
+   * Conflito de edição simultânea: nada de recarregar sozinho (o reload
+   * antigo descartava as edições e ainda disparava o diálogo de "sair sem
+   * salvar" por cima do aviso). O usuário decide, informado de quem publicou.
+   */
+  function mostrarConflito(erro) {
+    const ultima = erro.corpo && erro.corpo.ultimaAlteracao;
+    const quando = ultima && ultima.data ? new Date(ultima.data).toLocaleString('pt-BR') : '';
+    const contexto = ultima
+      ? `Última publicação: "${escapar(ultima.mensagem)}"${quando ? ` em ${escapar(quando)}` : ''}.`
+      : '';
+
+    const faixa = $('#faixaStatus');
+    faixa.className = 'faixa erro';
+    faixa.innerHTML =
+      `Alguém publicou o estoque enquanto você editava. ${contexto}<br>` +
+      `<span class="faixa-acoes">` +
+      `<button type="button" class="btn btn-secundario" data-conflito="manter">Publicar minha versão mesmo assim</button>` +
+      `<button type="button" class="btn btn-ghost" data-conflito="descartar">Descartar minhas alterações</button>` +
+      `</span>`;
+    faixa.hidden = false;
+  }
+
+  $('#faixaStatus').addEventListener('click', async (evento) => {
+    const botao = evento.target.closest('[data-conflito]');
+    if (!botao) return;
+
+    if (botao.dataset.conflito === 'manter') {
+      try {
+        // Pega o sha atual do servidor e publica a versão local por cima —
+        // escolha explícita e informada, não um clobber silencioso.
+        const { sha } = await api('vehicles');
+        estado.sha = sha;
+        $('#faixaStatus').hidden = true;
+        await publicar();
+      } catch (erro) {
+        mostrarFaixa(erro.message, 'erro');
+      }
+    } else {
+      $('#faixaStatus').hidden = true;
+      await abrirPainel();
     }
   });
 

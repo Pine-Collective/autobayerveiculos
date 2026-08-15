@@ -75,6 +75,17 @@ github_pat_11ABCDE0Y0aBcDeFgHiJkL_mNoPqRsTuVwXyZ1234567890abcdefGHIJKL
 da própria senha — o que funciona bem e tem um efeito desejável: **trocar a
 senha derruba todas as sessões abertas**.
 
+### Renovar o token
+
+O token tem prazo de validade (você escolheu ao criar — anote!). Quando
+vencer, o painel passa a responder **"O GitHub recusou o acesso — o token
+provavelmente venceu"** em qualquer publicação. Para renovar:
+
+1. Gere um token novo repetindo o passo 1 (ou use **Regenerate** no token
+   existente em GitHub → Settings → Developer settings)
+2. No Vercel, edite a variável `GITHUB_TOKEN` com o valor novo
+3. Faça um redeploy (Deployments → ⋯ → Redeploy)
+
 ### 3. Publicar
 
 Depois de salvar as variáveis, faça um novo deploy (as variáveis só valem a
@@ -104,17 +115,26 @@ o valor final embaixo.
 ### Fotos
 
 - A **primeira foto é a capa**; use a estrela (★) para promover outra
-- Podem ser enviadas várias de uma vez
-- As imagens são reduzidas para no máximo 1600px e convertidas em WebP **no
-  próprio navegador**, antes de subir. Uma foto de 8 MB do celular vira cerca
-  de 150 KB — o envio fica rápido no 4G e o repositório não incha
+- Podem ser adicionadas várias de uma vez
+- As imagens são reduzidas para no máximo 1600px e convertidas em **WebP no
+  próprio navegador** (formato ~35% menor que JPEG). Uma foto de 8 MB do
+  celular vira cerca de 150 KB. Em navegadores sem suporte a gerar WebP
+  (Safari antigo), o formato cai para JPEG — nunca PNG
+- **As fotos só sobem quando você clica em Publicar.** Cancelou o cadastro?
+  Nada ficou para trás no servidor
 - Fotos deitadas por causa do sensor do celular são corrigidas automaticamente
+
+### Sessão expirada no meio do trabalho
+
+A sessão dura 8 horas. Se vencer com alterações pendentes, o painel pede a
+senha de novo **sem descartar nada** — você entra e continua de onde parou.
 
 ### Duas pessoas editando ao mesmo tempo
 
 Se alguém publicar enquanto você edita, sua publicação é **recusada** com um
-aviso, em vez de apagar o trabalho da outra pessoa. A página recarrega e você
-refaz a alteração.
+aviso dizendo qual foi a última publicação, e você escolhe: **publicar a sua
+versão mesmo assim** (sobrescreve a da outra pessoa, com consciência) ou
+**descartar as suas alterações** e recarregar o que está no ar.
 
 ---
 
@@ -135,8 +155,9 @@ refaz a alteração.
 **Limitações que você deve conhecer:**
 
 - **A senha é única e compartilhada.** Não há usuários separados, então não dá
-  para saber quem fez cada alteração — os commits saem todos como "admin".
-  Se isso passar a importar, o próximo passo é login por usuário.
+  para saber quem da equipe fez cada alteração — os commits saem todos como
+  "Painel Autobayer". Se isso passar a importar, o próximo passo é login por
+  usuário.
 - **O freio contra tentativas de senha é fraco.** Ele vive na memória da
   instância, e o Vercel roda várias e as recicla, então não é um limite global.
   O que realmente protege é uma senha longa somada ao atraso fixo em toda
@@ -146,7 +167,8 @@ refaz a alteração.
   só evita que a página apareça em busca — não é proteção.
 - **As fotos ficam no histórico do Git para sempre.** Excluir um carro não
   apaga as fotos dos commits antigos. Com a compressão aplicada isso leva anos
-  para virar problema, mas é bom saber.
+  para virar problema; `node scripts/prune-photos.mjs` lista e remove as que
+  ficaram sem referência na versão atual.
 
 ---
 
@@ -165,19 +187,28 @@ refaz a alteração.
 ## Para desenvolvedores
 
 O estoque é `data/vehicles.json` — fonte da verdade, editável direto no repo.
-O build gera `js/vehicles.js` a partir dele (por isso o gerado fica fora do Git).
+`npm run data` gera `js/vehicles.js` (dados para o site) e `admin/schema.js`
+(listas e regras de slug para o painel) a partir dele e de
+`lib/vehicle-schema.mjs` — os dois gerados ficam fora do Git.
 
 ```bash
-npm run test:admin   # 78 verificações: auth, API, validação e interface
-npm run data         # regenera js/vehicles.js a partir do JSON
+npm test               # unitários: site + painel + consistência de CSS
+npm run test:e2e       # navegador real (Chromium) contra o public/ do build
+npm run data           # regenera os arquivos derivados
+node scripts/prune-photos.mjs   # lista fotos órfãs (--apagar para remover)
 ```
 
 As regras de validação vivem em `lib/vehicle-schema.mjs` e rodam nos dois
-lados: no build e na API.
+lados: no build e na API. Os testes simulam o GitHub em memória — nenhum
+commit real é feito. O upload com canvas de verdade (compressão WebP) é
+coberto pelo e2e, que o jsdom não alcança.
 
-Os testes simulam o GitHub em memória — nenhum commit real é feito.
+**Desenvolvimento local do painel:** `npm run dev` serve só o site estático —
+as funções de `/api` não rodam nele, então o login local falha. Para o painel
+completo use `vercel dev` (com as variáveis num `.env`), ou rode o mesmo
+servidor dos testes: `npm run build && node scripts/e2e/server.mjs` (senha de
+teste no topo do arquivo, GitHub simulado).
 
-**Limitação conhecida dos testes:** o envio de foto pela interface não é
-coberto, porque o jsdom não implementa `canvas`/`createImageBitmap`, usados na
-compressão. A API de upload é testada diretamente; o caminho do navegador
-precisa de conferência manual.
+**Trabalho local × painel:** o painel commita direto na `main`. Antes de
+trabalhar e de dar push, **sempre `git pull`** — ou o push vai conflitar com
+publicações da equipe.

@@ -2,8 +2,13 @@ node_modules/
 dist/
 public/
 
-# Gerado a partir de data/vehicles.json (npm run data)
+# Gerados por npm run data (fontes: data/vehicles.json e lib/vehicle-schema.mjs)
 js/vehicles.js
+admin/schema.js
+
+# Playwright
+test-results/
+playwright-report/
 .DS_Store
 Thumbs.db
 *.log

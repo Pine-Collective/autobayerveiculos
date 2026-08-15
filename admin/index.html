@@ -18,6 +18,17 @@
       <form class="login-card" id="formLogin">
         <img src="/assets/logo-autobayer.png" alt="Autobayer Veículos" width="430" height="160" />
         <h1>Painel do estoque</h1>
+        <!-- Campo de usuário fixo e invisível: sem ele, gerenciadores de
+             senha não oferecem salvar/preencher a senha do painel. -->
+        <input
+          class="visually-hidden"
+          type="text"
+          autocomplete="username"
+          value="equipe"
+          readonly
+          tabindex="-1"
+          aria-hidden="true"
+        />
         <label for="senha">Senha</label>
         <input id="senha" type="password" autocomplete="current-password" required />
         <button class="btn btn-primary" type="submit" id="botaoEntrar">Entrar</button>
@@ -151,10 +162,17 @@
 
             <div class="galeria-acoes">
               <label class="btn btn-secundario" for="arquivoFoto">
-                Enviar fotos
+                Adicionar fotos
                 <input id="arquivoFoto" type="file" accept="image/*" multiple hidden />
               </label>
               <button class="btn btn-ghost" id="botaoUrl" type="button">Colar link</button>
+            </div>
+            <div class="colar-link" id="colarLink" hidden>
+              <label class="visually-hidden" for="campoUrlFoto">Endereço da imagem</label>
+              <input id="campoUrlFoto" type="url" placeholder="https://..." />
+              <button class="btn btn-secundario" id="botaoAdicionarUrl" type="button">
+                Adicionar
+              </button>
             </div>
             <p class="progresso" id="progressoUpload" hidden></p>
           </div>
@@ -172,6 +190,8 @@
       </div>
     </div>
 
+    <!-- schema.js é gerado de lib/vehicle-schema.mjs (npm run data) -->
+    <script src="/admin/schema.js"></script>
     <script src="/admin/admin.js"></script>
   </body>
 </html>

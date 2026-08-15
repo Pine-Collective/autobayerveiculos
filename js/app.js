@@ -47,14 +47,18 @@
     };
   }
 
-  /** Envia um evento para o GA4/dataLayer, se houver. Silencioso se não houver. */
+  /**
+   * Envia um evento de analytics. Uma convenção só: com gtag carregado
+   * (ga4Id preenchido), usa gtag; sem ele, empilha no dataLayer para um
+   * futuro GTM. Nunca os dois — evitava-se o risco de contagem dupla.
+   */
   function track(eventName, params) {
-    const payload = Object.assign({ event: eventName }, params || {});
-    window.dataLayer = window.dataLayer || [];
-    window.dataLayer.push(payload);
     if (typeof window.gtag === 'function') {
       window.gtag('event', eventName, params || {});
+      return;
     }
+    window.dataLayer = window.dataLayer || [];
+    window.dataLayer.push(Object.assign({ event: eventName }, params || {}));
   }
 
   function whatsappLink(message) {
@@ -197,12 +201,12 @@
     const name = `${vehicle.brand} ${vehicle.model}`;
     const badge = vehicle.sold ? 'Vendido' : vehicle.badge;
 
+    // O card inteiro é clicável através do link "esticado" no título (CSS
+    // .vehicle-link::after). Um link de verdade — não role="button" — dá
+    // teclado e leitor de tela de graça, URL compartilhável no clique do
+    // meio, e evita o erro de ARIA de aninhar o botão ♡ dentro de um botão.
     return `
-      <article class="vehicle-card${vehicle.sold ? ' is-sold' : ''}"
-               data-id="${vehicle.id}"
-               tabindex="0"
-               role="button"
-               aria-label="Ver detalhes do ${escapeHtml(name)} ${vehicle.year}">
+      <article class="vehicle-card${vehicle.sold ? ' is-sold' : ''}" data-id="${vehicle.id}">
         <div class="vehicle-image">
           <img src="${escapeHtml(vehicle.images[0])}"
                alt="${escapeHtml(name)} ${vehicle.year}"
@@ -217,7 +221,11 @@
         </div>
         <div class="vehicle-info">
           <div class="vehicle-title">
-            <h3>${escapeHtml(name)}</h3>
+            <h3>
+              <a class="vehicle-link" href="?veiculo=${encodeURIComponent(vehicle.slug)}">
+                ${escapeHtml(name)}
+              </a>
+            </h3>
             <span class="vehicle-year">${vehicle.year}</span>
           </div>
           <p class="vehicle-sub">${escapeHtml(vehicle.type)} · ${formatKm(vehicle.km)} · ${escapeHtml(vehicle.gear)}</p>
@@ -452,7 +460,20 @@
       return;
     }
     const vehicle = VEHICLES.find((v) => v.slug === slug);
-    if (vehicle) openModal(vehicle, Object.assign({ skipHistory: true }, options));
+    if (vehicle) {
+      openModal(vehicle, Object.assign({ skipHistory: true }, options));
+      return;
+    }
+
+    // Link compartilhado de um carro que saiu do estoque: antes o site
+    // ficava em silêncio e parecia quebrado. Avisa e leva ao catálogo.
+    const aviso = $('#linkAviso');
+    if (aviso) {
+      aviso.hidden = false;
+      const estoque = document.getElementById('estoque');
+      if (estoque) estoque.scrollIntoView();
+      track('deep_link_morto', { slug });
+    }
   }
 
   /* ---------------------------------------------------------------------
@@ -519,50 +540,9 @@
     sections.forEach((section) => observer.observe(section));
   }
 
-  /* ---------------------------------------------------------------------
-   * Dados estruturados para o Google (schema.org)
-   * ------------------------------------------------------------------ */
-
-  function injectVehicleSchema() {
-    const available = VEHICLES.filter((v) => !v.sold);
-    const schema = {
-      '@context': 'https://schema.org',
-      '@type': 'ItemList',
-      name: 'Estoque Autobayer Veículos',
-      numberOfItems: available.length,
-      itemListElement: available.map((vehicle, index) => ({
-        '@type': 'ListItem',
-        position: index + 1,
-        item: {
-          '@type': 'Car',
-          name: `${vehicle.brand} ${vehicle.model} ${vehicle.year}`,
-          brand: { '@type': 'Brand', name: vehicle.brand },
-          model: vehicle.model,
-          vehicleModelDate: String(vehicle.year),
-          bodyType: vehicle.type,
-          color: vehicle.color,
-          fuelType: vehicle.fuel,
-          vehicleTransmission: vehicle.gear,
-          numberOfDoors: vehicle.doors,
-          mileageFromOdometer: { '@type': 'QuantitativeValue', value: vehicle.km, unitCode: 'KMT' },
-          image: vehicle.images,
-          url: `${CONFIG.siteUrl}/?veiculo=${vehicle.slug}`,
-          offers: {
-            '@type': 'Offer',
-            price: vehicle.price,
-            priceCurrency: 'BRL',
-            availability: 'https://schema.org/InStock',
-            seller: { '@type': 'AutoDealer', name: CONFIG.nome }
-          }
-        }
-      }))
-    };
-
-    const script = document.createElement('script');
-    script.type = 'application/ld+json';
-    script.textContent = JSON.stringify(schema);
-    document.head.appendChild(script);
-  }
+  /* O JSON-LD do estoque agora é gerado no BUILD (scripts/build-site.mjs),
+   * direto no HTML — o Google o vê sem executar JavaScript. A geração no
+   * cliente foi removida daqui. */
 
   /* ---------------------------------------------------------------------
    * Preenche telefone/WhatsApp a partir do config.js
@@ -588,12 +568,6 @@
    * ------------------------------------------------------------------ */
 
   function setupCatalogEvents() {
-    // Clique e teclado nos cards (antes só funcionava com mouse).
-    const activateCard = (card) => {
-      const vehicle = VEHICLES.find((v) => v.id === Number(card.dataset.id));
-      openModal(vehicle);
-    };
-
     elements.grid.addEventListener('click', (event) => {
       const heart = event.target.closest('[data-heart]');
       if (heart) {
@@ -607,16 +581,14 @@
         if (again) again.focus();
         return;
       }
-      const card = event.target.closest('.vehicle-card');
-      if (card) activateCard(card);
-    });
 
-    elements.grid.addEventListener('keydown', (event) => {
+      // O link do card navegaria de verdade (e funciona se o JS falhar);
+      // com JS ativo interceptamos para abrir o modal sem recarregar.
+      const link = event.target.closest('a.vehicle-link');
       const card = event.target.closest('.vehicle-card');
-      if (!card || event.target.closest('[data-heart]')) return;
-      if (event.key === 'Enter' || event.key === ' ') {
-        event.preventDefault();
-        activateCard(card);
+      if (card) {
+        if (link) event.preventDefault();
+        openModal(VEHICLES.find((v) => v.id === Number(card.dataset.id)));
       }
     });
 
@@ -741,7 +713,6 @@
     setupMobileMenu();
     setupScrollSpy();
     setupAnalytics();
-    injectVehicleSchema();
     render();
     openFromUrl();
   }

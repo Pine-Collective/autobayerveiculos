@@ -16,11 +16,13 @@
     "test:site": "node scripts/smoke-test.mjs",
     "test:admin": "node scripts/test-admin.mjs",
     "test:build": "npm run build && node scripts/smoke-test.mjs public",
+    "test:e2e": "npm run build && playwright test -c scripts/e2e/playwright.config.mjs",
     "sitemap": "node scripts/build-sitemap.mjs",
     "images": "node scripts/build-images.mjs",
     "build": "npm run data && npm run sitemap && npm run images && node scripts/build-site.mjs"
   },
   "devDependencies": {
+    "@playwright/test": "^1.62.1",
     "jsdom": "^30.0.1",
     "prettier": "^3.4.2",
     "sharp": "^0.35.3"

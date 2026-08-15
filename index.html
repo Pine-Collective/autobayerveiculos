@@ -10,8 +10,9 @@
     />
     <meta name="theme-color" content="#090a0c" />
 
-    <!-- TODO: ajuste o domínio em js/config.js e nas 3 URLs absolutas abaixo. -->
-    <link rel="canonical" href="https://www.autobayerveiculos.com.br/" />
+    <!-- __SITE_URL__ é trocado pelo siteUrl de js/config.js no build
+         (scripts/build-site.mjs). Para mudar o domínio, edite só o config. -->
+    <link rel="canonical" href="__SITE_URL__/" />
 
     <!-- Open Graph: define a prévia ao compartilhar o link no WhatsApp,
          Instagram e Facebook. Sem isto, o link aparece "pelado". -->
@@ -23,11 +24,8 @@
       property="og:description"
       content="Seminovos selecionados e revisados, com procedência garantida. Encontre o carro ideal para cada momento da sua vida."
     />
-    <meta property="og:url" content="https://www.autobayerveiculos.com.br/" />
-    <meta
-      property="og:image"
-      content="https://www.autobayerveiculos.com.br/assets/og-autobayer.jpg"
-    />
+    <meta property="og:url" content="__SITE_URL__/" />
+    <meta property="og:image" content="__SITE_URL__/assets/og-autobayer.jpg" />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
     <meta property="og:image:alt" content="Autobayer Veículos — catálogo de seminovos" />
@@ -52,11 +50,11 @@
         "@type": "AutoDealer",
         "name": "Autobayer Veículos",
         "description": "Compra, venda e troca de veículos seminovos com procedência garantida.",
-        "url": "https://www.autobayerveiculos.com.br/",
-        "logo": "https://www.autobayerveiculos.com.br/assets/logo-autobayer.png",
-        "image": "https://www.autobayerveiculos.com.br/assets/og-autobayer.jpg",
+        "url": "__SITE_URL__/",
+        "logo": "__SITE_URL__/assets/logo-autobayer.png",
+        "image": "__SITE_URL__/assets/og-autobayer.jpg",
         "telephone": "+5511999990000",
-        "priceRange": "R$$",
+        "priceRange": "$$",
         "address": {
           "@type": "PostalAddress",
           "streetAddress": "Av. Exemplo, 1000",
@@ -75,6 +73,9 @@
         ]
       }
     </script>
+    <!-- __SCHEMA_ESTOQUE__ : o build injeta aqui o JSON-LD com os veículos,
+         gerado de data/vehicles.json — assim o Google vê o estoque sem
+         depender de JavaScript. -->
   </head>
 
   <body>
@@ -114,6 +115,11 @@
           <a href="#estoque">Estoque</a>
           <a href="#sobre">A Autobayer</a>
           <a href="#contato">Contato</a>
+          <!-- Só aparece no painel mobile: no desktop o telefone já está no
+               topo, mas no celular o topbar some e o número ficava invisível. -->
+          <a class="nav-phone" data-phone-link href="tel:+5511999990000">
+            <span aria-hidden="true">✆</span> <span data-phone-text>(11) 99999-0000</span>
+          </a>
         </nav>
 
         <a
@@ -235,6 +241,21 @@
           </div>
 
           <p class="visually-hidden" id="resultCount" role="status" aria-live="polite"></p>
+
+          <!-- Mostrado quando um link compartilhado aponta para um veículo
+               que saiu do estoque — antes o site ficava em silêncio. -->
+          <p class="link-aviso" id="linkAviso" role="status" hidden>
+            O veículo desse link já saiu do estoque. Veja abaixo os disponíveis — ou
+            <a
+              data-wa-link
+              data-cta="whatsapp-link-morto"
+              href="https://wa.me/5511999990000"
+              target="_blank"
+              rel="noopener"
+              >chame no WhatsApp</a
+            >
+            que buscamos um parecido.
+          </p>
 
           <div class="vehicle-grid" id="vehicleGrid"></div>
 

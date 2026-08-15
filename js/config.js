@@ -30,8 +30,10 @@ window.AUTOBAYER_CONFIG = {
     pais: 'BR'
   },
 
-  // Domínio final do site. Usado em canonical, Open Graph e sitemap.xml.
-  siteUrl: 'https://www.autobayerveiculos.com.br',
+  // Domínio público do site — fonte ÚNICA: o build injeta este valor no
+  // canonical, Open Graph, JSON-LD, robots.txt e sitemap.xml.
+  // Quando o domínio próprio for registrado, basta trocar esta linha.
+  siteUrl: 'https://autobayerveiculos.vercel.app',
 
   // ID de medição do Google Analytics 4 (formato G-XXXXXXXXXX).
   // Deixe vazio para manter o analytics desligado.

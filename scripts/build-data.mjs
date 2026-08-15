@@ -10,7 +10,15 @@
 import { readFile, writeFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
-import { validarEstoque } from '../lib/vehicle-schema.mjs';
+import {
+  validarEstoque,
+  gerarSlug,
+  slugUnico,
+  TIPOS,
+  COMBUSTIVEIS,
+  CAMBIOS,
+  SELOS
+} from '../lib/vehicle-schema.mjs';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 
@@ -44,8 +52,32 @@ window.AUTOBAYER_VEHICLES = ${JSON.stringify(vehicles, null, 2)};
 
 await writeFile(join(root, 'js/vehicles.js'), output, 'utf8');
 
+/*
+ * Também gera admin/schema.js: as listas de tipos/combustíveis/etc. e as
+ * funções de slug que o painel usa no navegador. Antes elas eram copiadas à
+ * mão no admin.js ("espelham a lib") — drift garantido. Gerar a partir da lib
+ * mantém uma única fonte de verdade sem transformar o admin em ES module,
+ * que o jsdom (usado nos testes) não executa.
+ */
+const schema = `/**
+ * ARQUIVO GERADO — não edite à mão.
+ *
+ * Fonte: lib/vehicle-schema.mjs
+ * Gere novamente com: npm run data
+ */
+window.AUTOBAYER_SCHEMA = {
+  TIPOS: ${JSON.stringify(TIPOS)},
+  COMBUSTIVEIS: ${JSON.stringify(COMBUSTIVEIS)},
+  CAMBIOS: ${JSON.stringify(CAMBIOS)},
+  SELOS: ${JSON.stringify(SELOS)},
+  gerarSlug: ${gerarSlug.toString()},
+  slugUnico: ${slugUnico.toString()}
+};
+`;
+await writeFile(join(root, 'admin/schema.js'), schema, 'utf8');
+
 const disponiveis = vehicles.filter((v) => !v.sold).length;
 console.log(
-  `js/vehicles.js gerado — ${vehicles.length} veículos ` +
+  `js/vehicles.js e admin/schema.js gerados — ${vehicles.length} veículos ` +
     `(${disponiveis} disponíveis, ${vehicles.length - disponiveis} vendidos).`
 );

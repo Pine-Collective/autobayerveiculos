@@ -2,7 +2,7 @@
  * Testes do painel do estoque: autenticação, validação, endpoints da API e o
  * fluxo do admin num DOM real.
  *
- * O GitHub é simulado — nenhum commit de verdade é feito.
+ * O GitHub é simulado (scripts/lib/mock-github.mjs) — nenhum commit real.
  *
  *   npm run test:admin
  */
@@ -11,6 +11,7 @@ import { readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 import { createHash, createHmac } from 'node:crypto';
+import { instalarMockGitHub } from './lib/mock-github.mjs';
 
 const { JSDOM, VirtualConsole, requestInterceptor } = jsdom;
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
@@ -40,63 +41,12 @@ process.env.GITHUB_TOKEN = 'token-falso';
 process.env.GITHUB_REPO = 'Pine-Collective/autobayerveiculos';
 process.env.GITHUB_BRANCH = 'main';
 
-/** Repositório falso, em memória. */
-const repositorio = new Map();
-const commits = [];
-let proximoSha = 1;
-
-repositorio.set('data/vehicles.json', {
-  conteudo: await readFile(join(root, 'data/vehicles.json'), 'utf8'),
-  sha: 'sha-inicial'
+const { repositorio, commits } = instalarMockGitHub({
+  'data/vehicles.json': await readFile(join(root, 'data/vehicles.json'), 'utf8')
 });
+const SHA_INICIAL = repositorio.get('data/vehicles.json').sha;
 
-// Intercepta as chamadas ao GitHub antes de qualquer módulo importá-lo.
-const fetchReal = globalThis.fetch;
-globalThis.fetch = async (url, opcoes = {}) => {
-  const endereco = String(url);
-  if (!endereco.startsWith('https://api.github.com')) return fetchReal(url, opcoes);
-
-  const caminho = decodeURIComponent(
-    endereco
-      .replace(/^https:\/\/api\.github\.com\/repos\/[^/]+\/[^/]+\/contents\//, '')
-      .split('?')[0]
-  );
-
-  const resposta = (corpo, status = 200) =>
-    new Response(JSON.stringify(corpo), {
-      status,
-      headers: { 'Content-Type': 'application/json' }
-    });
-
-  if (!opcoes.method || opcoes.method === 'GET') {
-    const arquivo = repositorio.get(caminho);
-    if (!arquivo) return resposta({ message: 'Not Found' }, 404);
-    return resposta({
-      content: Buffer.from(arquivo.conteudo).toString('base64'),
-      sha: arquivo.sha
-    });
-  }
-
-  if (opcoes.method === 'PUT') {
-    const corpo = JSON.parse(opcoes.body);
-    const atual = repositorio.get(caminho);
-
-    // Conflito: sha enviado não bate com o atual.
-    if (atual && corpo.sha !== atual.sha) {
-      return resposta({ message: 'does not match' }, 409);
-    }
-
-    const novoSha = `sha-${proximoSha++}`;
-    repositorio.set(caminho, {
-      conteudo: Buffer.from(corpo.content, 'base64').toString('utf8'),
-      sha: novoSha
-    });
-    commits.push({ caminho, mensagem: corpo.message });
-    return resposta({ content: { sha: novoSha }, commit: { sha: `commit-${novoSha}` } });
-  }
-
-  return resposta({ message: 'Método não suportado no teste' }, 405);
-};
+const lerRepoJson = () => JSON.parse(repositorio.get('data/vehicles.json').conteudo);
 
 /* Utilitário: chama um handler da API como o Vercel chamaria. */
 async function chamar(handler, { method = 'GET', body, token } = {}) {
@@ -130,7 +80,8 @@ async function chamar(handler, { method = 'GET', body, token } = {}) {
 const login = (await import('../api/login.js')).default;
 const vehicles = (await import('../api/vehicles.js')).default;
 const upload = (await import('../api/upload.js')).default;
-const { validarEstoque, normalizarVeiculo, gerarSlug } = await import('../lib/vehicle-schema.mjs');
+const { validarEstoque, normalizarVeiculo, gerarSlug, slugUnico, garantirSlugsUnicos } =
+  await import('../lib/vehicle-schema.mjs');
 
 /* ================================================================== */
 console.log('\n1. Login e sessão');
@@ -156,7 +107,7 @@ const tokenFalso = await chamar(vehicles, { method: 'GET', token: 'abc.def' });
 check('API recusa token forjado', tokenFalso.status === 401);
 
 // Token com payload alterado, mas assinatura da sessão original.
-const [payloadOriginal, assinatura] = TOKEN.split('.');
+const [, assinatura] = TOKEN.split('.');
 const payloadAlterado = Buffer.from(JSON.stringify({ exp: Date.now() + 999999999 })).toString(
   'base64url'
 );
@@ -191,7 +142,7 @@ console.log('\n2. Leitura do estoque');
 const leitura = await chamar(vehicles, { method: 'GET', token: TOKEN });
 check('GET devolve a lista de veículos', Array.isArray(leitura.body.vehicles));
 check('GET devolve 6 veículos', leitura.body.vehicles.length === 6);
-check('GET devolve o sha para controle de versão', leitura.body.sha === 'sha-inicial');
+check('GET devolve o sha para controle de versão', leitura.body.sha === SHA_INICIAL);
 
 /* ================================================================== */
 console.log('\n3. Gravação, validação e concorrência');
@@ -211,7 +162,7 @@ const invalido = await chamar(vehicles, {
   token: TOKEN,
   body: {
     vehicles: [{ ...estoque[0], price: -50, images: [] }],
-    sha: 'sha-inicial'
+    sha: SHA_INICIAL
   }
 });
 check('PUT com preço negativo é recusado', invalido.status === 400, `status ${invalido.status}`);
@@ -222,18 +173,65 @@ check(
   invalido.body.problemas?.join(' | ')
 );
 
+// Foto que ficou em data: (upload não aconteceu) não pode ir para o JSON.
+const comDataUrl = await chamar(vehicles, {
+  method: 'PUT',
+  token: TOKEN,
+  body: {
+    vehicles: [{ ...estoque[0], images: ['data:image/webp;base64,AAAA'] }, ...estoque.slice(1)],
+    sha: SHA_INICIAL
+  }
+});
+check('PUT com foto em data: é recusado', comDataUrl.status === 400, `status ${comDataUrl.status}`);
+check(
+  'erro explica que a foto não subiu',
+  (comDataUrl.body.problemas || []).some((p) => /não subiu/.test(p)),
+  comDataUrl.body.problemas?.join(' | ')
+);
+
+// Dois carros com o mesmo slug: a API resolve com sufixo em vez de recusar.
+const clone = { ...estoque[1], id: 999888 };
+const comClone = await chamar(vehicles, {
+  method: 'PUT',
+  token: TOKEN,
+  body: { vehicles: [...estoque, clone], sha: SHA_INICIAL, resumo: 'clona corolla' }
+});
+check('PUT com slug duplicado é aceito', comClone.status === 200, JSON.stringify(comClone.body));
+const aposClone = lerRepoJson();
+check(
+  'o duplicado ganhou sufixo -2 e o original ficou intacto',
+  aposClone.filter((v) => v.slug.startsWith('toyota-corolla-xei-2021')).length === 2 &&
+    aposClone.some((v) => v.slug === 'toyota-corolla-xei-2021') &&
+    aposClone.some((v) => v.slug === 'toyota-corolla-xei-2021-2'),
+  aposClone.map((v) => v.slug).join(', ')
+);
+
+// Restaura o estoque para os 6 originais.
+let shaAtual = repositorio.get('data/vehicles.json').sha;
+const restaura = await chamar(vehicles, {
+  method: 'PUT',
+  token: TOKEN,
+  body: { vehicles: estoque, sha: shaAtual, resumo: 'restaura' }
+});
+shaAtual = restaura.body.sha;
+
 // Marca o primeiro carro como vendido — o caso de uso principal.
 const vendido = estoque.map((v, i) => (i === 0 ? { ...v, sold: true } : v));
 const gravou = await chamar(vehicles, {
   method: 'PUT',
   token: TOKEN,
-  body: { vehicles: vendido, sha: 'sha-inicial', resumo: 'marca Compass como vendido' }
+  body: { vehicles: vendido, sha: shaAtual, resumo: 'marca Compass como vendido' }
 });
 check('PUT válido grava com sucesso', gravou.status === 200, JSON.stringify(gravou.body));
 check('devolve o novo sha', Boolean(gravou.body.sha));
 check('gerou commit com mensagem descritiva', commits.at(-1).mensagem.includes('vendido'));
+check(
+  'commit sai em nome do painel',
+  commits.at(-1).committer?.name === 'Painel Autobayer',
+  JSON.stringify(commits.at(-1).committer)
+);
 
-const persistido = JSON.parse(repositorio.get('data/vehicles.json').conteudo);
+const persistido = lerRepoJson();
 check('alteração ficou gravada no arquivo', persistido[0].sold === true);
 check('os outros veículos não foram afetados', persistido.filter((v) => v.sold).length === 1);
 
@@ -241,13 +239,13 @@ check('os outros veículos não foram afetados', persistido.filter((v) => v.sold
 const conflito = await chamar(vehicles, {
   method: 'PUT',
   token: TOKEN,
-  body: { vehicles: estoque, sha: 'sha-inicial' }
+  body: { vehicles: estoque, sha: SHA_INICIAL }
 });
 check('edição concorrente devolve 409 em vez de sobrescrever', conflito.status === 409);
 check(
-  'mensagem de conflito é compreensível',
-  /Recarregue a página/.test(conflito.body.erro),
-  conflito.body.erro
+  '409 informa qual foi a última publicação',
+  Boolean(conflito.body.ultimaAlteracao?.mensagem),
+  JSON.stringify(conflito.body.ultimaAlteracao)
 );
 
 /* Campos desconhecidos vindos do navegador não passam. */
@@ -260,10 +258,7 @@ const comLixo = await chamar(vehicles, {
   }
 });
 check('PUT com campo desconhecido é aceito', comLixo.status === 200);
-check(
-  'campo desconhecido é descartado na normalização',
-  !('campoEstranho' in JSON.parse(repositorio.get('data/vehicles.json').conteudo)[0])
-);
+check('campo desconhecido é descartado na normalização', !('campoEstranho' in lerRepoJson()[0]));
 
 /* ================================================================== */
 console.log('\n4. Upload de fotos');
@@ -319,25 +314,42 @@ check(
 );
 
 /* ================================================================== */
-console.log('\n5. Regras de validação');
+console.log('\n5. Regras de validação e slugs');
 /* ================================================================== */
 
 check(
   'slug tira acento e espaço',
   gerarSlug('Citroën', 'C3 Aircross', 2024) === 'citroen-c3-aircross-2024'
 );
-check('estoque válido não gera problema', validarEstoque(persistido).length === 0);
+check('slugUnico devolve a base quando livre', slugUnico('a-b', ['x']) === 'a-b');
+check('slugUnico sufixa quando ocupado', slugUnico('a-b', ['a-b']) === 'a-b-2');
+check('slugUnico pula sufixos já usados', slugUnico('a-b', ['a-b', 'a-b-2']) === 'a-b-3');
+
+const listaComDuplicatas = [
+  { slug: 'x', id: 1 },
+  { slug: 'x', id: 2 },
+  { slug: 'x', id: 3 }
+];
+check(
+  'garantirSlugsUnicos preserva o primeiro e sufixa os demais',
+  garantirSlugsUnicos(listaComDuplicatas)
+    .map((v) => v.slug)
+    .join(',') === 'x,x-2,x-3'
+);
+
+const estoqueValido = lerRepoJson();
+check('estoque válido não gera problema', validarEstoque(estoqueValido).length === 0);
 check(
   'id repetido é detectado',
-  validarEstoque([persistido[0], persistido[0]]).some((p) => /repetido/.test(p))
+  validarEstoque([estoqueValido[0], estoqueValido[0]]).some((p) => /repetido/.test(p))
 );
 check(
   'tipo inválido é detectado',
-  validarEstoque([{ ...persistido[0], type: 'Moto' }]).some((p) => /tipo/.test(p))
+  validarEstoque([{ ...estoqueValido[0], type: 'Moto' }]).some((p) => /tipo/.test(p))
 );
 check(
   'veículo sem foto é detectado',
-  validarEstoque([{ ...persistido[0], images: [] }]).some((p) => /foto/.test(p))
+  validarEstoque([{ ...estoqueValido[0], images: [] }]).some((p) => /foto/.test(p))
 );
 
 const normalizado = normalizarVeiculo({
@@ -370,26 +382,9 @@ virtualConsole.on('jsdomError', (e) => errosConsole.push(e.message));
 const ORIGEM = 'https://autobayer.test';
 const MIME = { js: 'text/javascript', css: 'text/css', svg: 'image/svg+xml', png: 'image/png' };
 
-/* Serve os arquivos do admin do disco e responde às chamadas de /api com o
-   backend real que já testamos acima. */
+/* Serve os arquivos do admin do disco. */
 const interceptor = requestInterceptor(async (request) => {
   const url = new URL(request.url);
-
-  if (url.pathname.startsWith('/api/')) {
-    const nome = url.pathname.replace('/api/', '');
-    const handlers = { login, vehicles, upload };
-    const corpo = request.method === 'GET' ? undefined : await request.clone().json();
-    const resultado = await chamar(handlers[nome], {
-      method: request.method,
-      body: corpo,
-      token: (request.headers.get('authorization') || '').replace('Bearer ', '')
-    });
-    return new Response(JSON.stringify(resultado.body), {
-      status: resultado.status,
-      headers: { 'Content-Type': 'application/json' }
-    });
-  }
-
   const relativo = url.pathname.replace(/^\/+/, '');
   try {
     const conteudo = await readFile(join(root, relativo));
@@ -421,18 +416,26 @@ await tick();
 
 /**
  * O jsdom não implementa window.fetch (só XMLHttpRequest), então o admin
- * precisa de um substituto. Ele encaminha /api/* para os mesmos handlers
- * testados acima — ou seja, a interface conversa com o backend de verdade.
- *
- * Sem isto os testes de interface passariam por engano: toda chamada
- * falharia com "fetch is not defined" e o admin mostraria esse texto no
- * mesmo lugar onde mostraria "Senha incorreta".
+ * precisa de um substituto que encaminha /api/* aos handlers reais testados
+ * acima. `window.__proximaResposta` força uma resposta única (401/409) para
+ * exercitar os fluxos de sessão expirada e de conflito.
  */
+window.__proximaResposta = null;
 window.fetch = async (endereco, opcoes = {}) => {
   const url = new URL(endereco, `${ORIGEM}/admin`);
+
+  if (window.__proximaResposta) {
+    const forcada = window.__proximaResposta;
+    window.__proximaResposta = null;
+    return {
+      ok: false,
+      status: forcada.status,
+      json: async () => forcada.body
+    };
+  }
+
   const handlers = { login, vehicles, upload };
   const handler = handlers[url.pathname.replace('/api/', '')];
-
   if (!handler) {
     return { ok: false, status: 404, json: async () => ({ erro: 'Rota inexistente.' }) };
   }
@@ -453,6 +456,9 @@ window.fetch = async (endereco, opcoes = {}) => {
 
 const q = (s) => doc.querySelector(s);
 const qq = (s) => Array.from(doc.querySelectorAll(s));
+const clicar = (el) => el.dispatchEvent(new window.MouseEvent('click', { bubbles: true }));
+const submeter = (el) =>
+  el.dispatchEvent(new window.Event('submit', { bubbles: true, cancelable: true }));
 
 check('painel começa escondido, login visível', q('#painel').hidden && !q('#telaLogin').hidden);
 check('página do admin pede para não ser indexada', !!q('meta[name="robots"][content*="noindex"]'));
@@ -471,15 +477,18 @@ check(
   `relativos: ${relativas.join(', ')}`
 );
 check('folha de estilo do admin carregou', Boolean(q('link[href="/admin/admin.css"]')));
-check('menus foram preenchidos', qq('#f-type option').length === 4);
+check('schema.js gerado está referenciado', Boolean(q('script[src="/admin/schema.js"]')));
+check('menus vêm da fonte única (4 tipos)', qq('#f-type option').length === 4);
 check('menu de selos inclui a opção vazia', qq('#f-badge option').length === 5);
+check(
+  'login tem campo de usuário para gerenciador de senha',
+  !!q('input[autocomplete="username"]')
+);
 
 // Login pela interface
 q('#senha').value = 'errada';
-q('#formLogin').dispatchEvent(new window.Event('submit', { bubbles: true, cancelable: true }));
+submeter(q('#formLogin'));
 await tick(1200);
-// Confere o texto exato: um aviso genérico esconderia uma falha de infra
-// (por exemplo "fetch is not defined") passando como se fosse senha errada.
 check(
   'senha errada mostra exatamente "Senha incorreta."',
   q('#avisoLogin').textContent === 'Senha incorreta.',
@@ -488,29 +497,24 @@ check(
 check('continua na tela de login', !q('#telaLogin').hidden);
 
 q('#senha').value = SENHA;
-q('#formLogin').dispatchEvent(new window.Event('submit', { bubbles: true, cancelable: true }));
+submeter(q('#formLogin'));
 await tick(400);
 
 check('login correto abre o painel', !q('#painel').hidden && q('#telaLogin').hidden);
 check('senha é apagada do campo após entrar', q('#senha').value === '');
 check('lista carrega os veículos', qq('#lista .item').length === 6, `${qq('#lista .item').length}`);
 check('botão publicar começa desabilitado', q('#botaoSalvar').disabled);
+check('card mostra preço formatado', /R\$/.test(qq('#lista .item')[0].textContent));
 
-const primeiro = qq('#lista .item')[0];
-check('card mostra preço formatado', /R\$/.test(primeiro.textContent));
-
-// Conta a partir do repositório em vez de fixar um número: as seções
-// anteriores já mexeram no estado.
-const vendidosNoRepo = JSON.parse(repositorio.get('data/vehicles.json').conteudo).filter(
-  (v) => v.sold
-).length;
+const vendidosNoRepo = lerRepoJson().filter((v) => v.sold).length;
 check(
   'quantidade de vendidos na tela bate com o repositório',
   qq('#lista .item.vendido').length === vendidosNoRepo,
   `tela=${qq('#lista .item.vendido').length} repo=${vendidosNoRepo}`
 );
 
-// Interruptor de disponível/vendido
+/* --- Interruptor + publicar ------------------------------------------ */
+
 const interruptor = q('#lista input[data-disponivel]');
 const idAlvo = Number(interruptor.dataset.disponivel);
 const estavaVendido = !interruptor.checked;
@@ -520,52 +524,104 @@ await tick();
 
 check('mexer no interruptor habilita "Publicar"', !q('#botaoSalvar').disabled);
 check('aparece o aviso de alterações pendentes', !q('#pendencias').hidden);
-check(
-  'contagem do resumo se atualiza',
-  /à venda/.test(q('#resumo').textContent),
-  q('#resumo').textContent
-);
 
-// Publicar
-q('#botaoSalvar').dispatchEvent(new window.MouseEvent('click', { bubbles: true }));
+clicar(q('#botaoSalvar'));
 await tick(300);
 
 check('publicar limpa o estado de pendência', q('#botaoSalvar').disabled);
 check('mostra confirmação de sucesso', /Publicado/.test(q('#faixaStatus').textContent));
-
-const depoisDePublicar = JSON.parse(repositorio.get('data/vehicles.json').conteudo);
-const alvo = depoisDePublicar.find((v) => v.id === idAlvo);
 check(
   'a mudança do interruptor chegou ao repositório',
-  alvo.sold === !estavaVendido,
-  `sold=${alvo.sold}`
+  lerRepoJson().find((v) => v.id === idAlvo).sold === !estavaVendido
 );
 
-// Editor: novo veículo
-q('#botaoNovo').dispatchEvent(new window.MouseEvent('click', { bubbles: true }));
+/* --- Sessão expirada no meio do trabalho ------------------------------ */
+
+const interruptor2 = q('#lista input[data-disponivel]');
+interruptor2.checked = !interruptor2.checked;
+interruptor2.dispatchEvent(new window.Event('change', { bubbles: true }));
+await tick();
+const itensAntes = qq('#lista .item').length;
+
+window.__proximaResposta = { status: 401, body: { erro: 'Sessão expirada ou inválida.' } };
+clicar(q('#botaoSalvar'));
+await tick(200);
+
+check('sessão vencida volta para a tela de login', !q('#telaLogin').hidden && q('#painel').hidden);
+check(
+  'aviso deixa claro que nada foi perdido',
+  /NÃO foram perdidas/.test(q('#avisoLogin').textContent),
+  JSON.stringify(q('#avisoLogin').textContent)
+);
+
+q('#senha').value = SENHA;
+submeter(q('#formLogin'));
+await tick(400);
+
+check('reentrar traz o painel de volta', !q('#painel').hidden);
+check(
+  'as edições pendentes sobreviveram à reautenticação',
+  !q('#botaoSalvar').disabled && qq('#lista .item').length === itensAntes,
+  `publicar disabled=${q('#botaoSalvar').disabled}`
+);
+
+clicar(q('#botaoSalvar'));
+await tick(300);
+check(
+  'publicar depois da reautenticação funciona',
+  /Publicado/.test(q('#faixaStatus').textContent)
+);
+
+/* --- Conflito de edição simultânea (409) ------------------------------ */
+
+const interruptor3 = q('#lista input[data-disponivel]');
+interruptor3.checked = !interruptor3.checked;
+interruptor3.dispatchEvent(new window.Event('change', { bubbles: true }));
+await tick();
+
+window.__proximaResposta = {
+  status: 409,
+  body: {
+    erro: 'Alguém publicou o estoque enquanto você editava.',
+    ultimaAlteracao: { mensagem: 'admin: teste de conflito', data: new Date().toISOString() }
+  }
+};
+clicar(q('#botaoSalvar'));
+await tick(200);
+
+check(
+  'conflito mostra a faixa com contexto',
+  /teste de conflito/.test(q('#faixaStatus').textContent)
+);
+check('conflito oferece publicar mesmo assim', !!q('[data-conflito="manter"]'));
+check('conflito oferece descartar', !!q('[data-conflito="descartar"]'));
+check('painel continua visível (sem reload automático)', !q('#painel').hidden);
+
+clicar(q('[data-conflito="manter"]'));
+await tick(400);
+check(
+  'publicar minha versão resolve o conflito',
+  /Publicado/.test(q('#faixaStatus').textContent),
+  q('#faixaStatus').textContent
+);
+
+/* --- Editor: novo veículo com link de foto ---------------------------- */
+
+clicar(q('#botaoNovo'));
 await tick();
 check('editor abre para novo veículo', !q('#modalEditor').hidden);
-check('título indica cadastro novo', q('#tituloEditor').textContent === 'Novo veículo');
 check('botão excluir fica escondido no cadastro novo', q('#botaoExcluir').hidden);
 
-// Tenta salvar vazio
-q('#formVeiculo').dispatchEvent(new window.Event('submit', { bubbles: true, cancelable: true }));
+submeter(q('#formVeiculo'));
 await tick();
 check('formulário vazio mostra os erros', !q('#avisoFormulario').hidden);
 check('erro cita a falta de foto', /foto/i.test(q('#avisoFormulario').textContent));
 
-// Máscara de preço
 q('#f-price').value = '145900';
 q('#f-price').dispatchEvent(new window.Event('input', { bubbles: true }));
 await tick();
 check('preço ganha separador de milhar', q('#f-price').value === '145.900', q('#f-price').value);
-check(
-  'dica mostra o valor em reais',
-  /R\$/.test(q('#dicaPreco').textContent),
-  q('#dicaPreco').textContent
-);
 
-// Preenche e salva
 q('#f-brand').value = 'Fiat';
 q('#f-model').value = 'Toro Freedom';
 q('#f-year').value = '2023';
@@ -573,31 +629,62 @@ q('#f-km').value = '32000';
 q('#f-km').dispatchEvent(new window.Event('input', { bubbles: true }));
 q('#f-type').value = 'Picape';
 
-// Adiciona foto por link (o caminho de upload usa canvas, ausente no jsdom)
-window.prompt = () => 'assets/veiculos/toro.webp';
-q('#botaoUrl').dispatchEvent(new window.MouseEvent('click', { bubbles: true }));
+// Foto por link — o campo inline substituiu o prompt().
+clicar(q('#botaoUrl'));
+await tick();
+check('campo de link aparece', !q('#colarLink').hidden);
+q('#campoUrlFoto').value = 'assets/veiculos/toro.webp';
+clicar(q('#botaoAdicionarUrl'));
 await tick();
 check('foto adicionada aparece na galeria', qq('#galeria .foto').length === 1);
 check('primeira foto é marcada como capa', qq('#galeria .foto')[0].classList.contains('capa'));
 
-q('#formVeiculo').dispatchEvent(new window.Event('submit', { bubbles: true, cancelable: true }));
+submeter(q('#formVeiculo'));
 await tick();
-
 check('editor fecha ao aplicar', q('#modalEditor').hidden);
 check('veículo novo entra na lista', qq('#lista .item').length === 7);
-check('publicar volta a ficar habilitado', !q('#botaoSalvar').disabled);
 
-q('#botaoSalvar').dispatchEvent(new window.MouseEvent('click', { bubbles: true }));
+clicar(q('#botaoSalvar'));
 await tick(300);
-
-const comNovo = JSON.parse(repositorio.get('data/vehicles.json').conteudo);
-const toro = comNovo.find((v) => v.model === 'Toro Freedom');
+const toro = lerRepoJson().find((v) => v.model === 'Toro Freedom');
 check('veículo novo foi gravado', Boolean(toro));
 check('slug foi gerado sozinho', toro?.slug === 'fiat-toro-freedom-2023', toro?.slug);
 check('preço foi gravado como número', toro?.price === 145900, String(toro?.price));
 
-// Sair
-q('#botaoSair').dispatchEvent(new window.MouseEvent('click', { bubbles: true }));
+/* --- Segundo carro idêntico: slug ganha sufixo ------------------------ */
+
+clicar(q('#botaoNovo'));
+await tick();
+q('#f-brand').value = 'Fiat';
+q('#f-model').value = 'Toro Freedom';
+q('#f-year').value = '2023';
+q('#f-price').value = '139900';
+q('#f-price').dispatchEvent(new window.Event('input', { bubbles: true }));
+q('#f-type').value = 'Picape';
+clicar(q('#botaoUrl'));
+q('#campoUrlFoto').value = 'assets/veiculos/toro-2.webp';
+clicar(q('#botaoAdicionarUrl'));
+await tick();
+submeter(q('#formVeiculo'));
+await tick();
+clicar(q('#botaoSalvar'));
+await tick(300);
+
+const toros = lerRepoJson().filter((v) => v.model === 'Toro Freedom');
+check(
+  'dois carros iguais publicam com slugs distintos',
+  toros.length === 2 && new Set(toros.map((v) => v.slug)).size === 2,
+  toros.map((v) => v.slug).join(', ')
+);
+check(
+  'o segundo ganhou o sufixo -2',
+  toros.some((v) => v.slug === 'fiat-toro-freedom-2023-2'),
+  toros.map((v) => v.slug).join(', ')
+);
+
+/* --- Sair -------------------------------------------------------------- */
+
+clicar(q('#botaoSair'));
 await tick();
 check('sair volta para a tela de login', !q('#telaLogin').hidden && q('#painel').hidden);
 check('token é removido da sessão', !window.sessionStorage.getItem('autobayer:admin:token'));

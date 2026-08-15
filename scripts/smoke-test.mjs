@@ -327,19 +327,25 @@ check('URL volta ao normal', window.location.search === '', window.location.sear
 check('rolagem do body liberada', document.body.style.overflow === '');
 
 /* ------------------------------------------------------------------ */
-console.log('\n10. Acessibilidade por teclado');
+console.log('\n10. Acessibilidade e links reais nos cards');
 /* ------------------------------------------------------------------ */
 
-const kbCard = cards()[0];
-check('cards são focáveis', kbCard.getAttribute('tabindex') === '0');
-check('cards têm papel de botão', kbCard.getAttribute('role') === 'button');
+// O card usa um <a> "esticado" no título — teclado, leitor de tela e clique
+// do meio de graça, sem o erro de ARIA de botão dentro de role="button".
+const kbLink = cards()[0].querySelector('a.vehicle-link');
+check('card tem link real no título', Boolean(kbLink));
+check(
+  'href do link aponta para o deep link do veículo',
+  /^\?veiculo=[a-z0-9-]+$/.test(kbLink.getAttribute('href')),
+  kbLink.getAttribute('href')
+);
+check(
+  'nenhum card usa role="button" (ARIA inválida com o ♡ dentro)',
+  cards().every((c) => !c.getAttribute('role'))
+);
 
-kbCard.dispatchEvent(new window.KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
-check('Enter abre o modal', $('#modalBackdrop').classList.contains('open'));
-$('#modalClose').dispatchEvent(new window.MouseEvent('click', { bubbles: true }));
-
-cards()[0].dispatchEvent(new window.KeyboardEvent('keydown', { key: ' ', bubbles: true }));
-check('Espaço abre o modal', $('#modalBackdrop').classList.contains('open'));
+kbLink.dispatchEvent(new window.MouseEvent('click', { bubbles: true, cancelable: true }));
+check('clicar no link abre o modal sem navegar', $('#modalBackdrop').classList.contains('open'));
 $('#modalClose').dispatchEvent(new window.MouseEvent('click', { bubbles: true }));
 
 check(
@@ -367,21 +373,40 @@ check('clicar num link fecha o menu', !nav.classList.contains('open'));
 console.log('\n12. SEO e dados estruturados');
 /* ------------------------------------------------------------------ */
 
-const ldScripts = $$('script[type="application/ld+json"]');
-check('2 blocos de JSON-LD (negócio + estoque)', ldScripts.length === 2, `${ldScripts.length}`);
+// O fonte tem placeholders (__SITE_URL__, marcador do schema) que o build
+// resolve ao montar public/ — então as expectativas mudam conforme o alvo.
+const testandoBuild = root !== projectRoot;
 
+const ldScripts = $$('script[type="application/ld+json"]');
 const parsed = ldScripts.map((s) => JSON.parse(s.textContent));
 check(
-  'JSON-LD é válido e traz AutoDealer + ItemList',
-  parsed.some((p) => p['@type'] === 'AutoDealer') && parsed.some((p) => p['@type'] === 'ItemList')
+  'JSON-LD do negócio (AutoDealer) presente',
+  parsed.some((p) => p['@type'] === 'AutoDealer')
 );
 
-const itemList = parsed.find((p) => p['@type'] === 'ItemList');
-check(
-  `ItemList lista os ${VEHICLES.length} carros com preço`,
-  itemList.itemListElement.length === VEHICLES.length &&
-    itemList.itemListElement.every((i) => i.item.offers.price > 0)
-);
+if (testandoBuild) {
+  check('nenhum placeholder __SITE_URL__ sobrou no build', !html.includes('__SITE_URL__'));
+  check(
+    'canonical resolvida para o domínio do config',
+    /^https:\/\//.test($('link[rel="canonical"]').getAttribute('href')),
+    $('link[rel="canonical"]').getAttribute('href')
+  );
+
+  const itemList = parsed.find((p) => p['@type'] === 'ItemList');
+  check('build injeta o JSON-LD do estoque no HTML', Boolean(itemList));
+  check(
+    'ItemList lista os carros disponíveis com preço',
+    itemList &&
+      itemList.itemListElement.length === VEHICLES.filter((v) => !v.sold).length &&
+      itemList.itemListElement.every((i) => i.item.offers.price > 0)
+  );
+} else {
+  check(
+    'fonte mantém o marcador para o build injetar o schema do estoque',
+    html.includes('__SCHEMA_ESTOQUE__')
+  );
+  check('fonte usa o placeholder de domínio', html.includes('__SITE_URL__'));
+}
 
 check('og:image definida', !!$('meta[property="og:image"]'));
 check('og:title definida', !!$('meta[property="og:title"]'));
@@ -480,6 +505,34 @@ check(
   'conteúdo hostil é escapado como texto',
   $$('.vehicle-card h3').some((h) => h.textContent.includes('<img src=x'))
 );
+
+/* ------------------------------------------------------------------ */
+console.log('\n16. Deep link para veículo que saiu do estoque');
+/* ------------------------------------------------------------------ */
+
+// Nova página aberta direto num link compartilhado de carro removido:
+// o site precisa avisar, não ficar em silêncio.
+const domLinkMorto = new JSDOM(html, {
+  url: `${ORIGIN}/?veiculo=carro-que-nao-existe`,
+  runScripts: 'dangerously',
+  resources: { interceptors: [localFilesOnly] },
+  pretendToBeVisual: true,
+  virtualConsole
+});
+await new Promise((resolve) => {
+  if (domLinkMorto.window.document.readyState === 'complete') resolve();
+  else domLinkMorto.window.addEventListener('load', resolve);
+});
+await tick(80);
+
+const qMorto = (sel) => domLinkMorto.window.document.querySelector(sel);
+check('aviso de link morto aparece', qMorto('#linkAviso') && !qMorto('#linkAviso').hidden);
+check('modal NÃO abre para slug inexistente', !qMorto('#modalBackdrop').classList.contains('open'));
+check(
+  'catálogo continua renderizado por trás do aviso',
+  domLinkMorto.window.document.querySelectorAll('.vehicle-card').length > 0
+);
+domLinkMorto.window.close();
 
 /* ------------------------------------------------------------------ */
 

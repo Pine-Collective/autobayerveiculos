@@ -7,4 +7,4 @@ Allow: /
 Disallow: /admin
 Disallow: /api
 
-Sitemap: https://www.autobayerveiculos.com.br/sitemap.xml
+Sitemap: __SITE_URL__/sitemap.xml

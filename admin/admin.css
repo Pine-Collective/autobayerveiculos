@@ -55,6 +55,19 @@ img {
   border-radius: 3px;
 }
 
+/* Visível só para leitores de tela / gerenciadores de senha. */
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
 /* ---------------------------------------------------------------- */
 /* Botões                                                            */
 /* ---------------------------------------------------------------- */
@@ -349,6 +362,14 @@ select option {
   background: #10202e;
   border: 1px solid #1f4a6b;
   color: #8ecbf0;
+}
+
+/* Botões dentro da faixa de conflito de edição. */
+.faixa-acoes {
+  display: flex;
+  gap: 10px;
+  margin-top: 12px;
+  flex-wrap: wrap;
 }
 
 /* ---------------------------------------------------------------- */
@@ -691,6 +712,16 @@ select option {
 }
 
 .galeria-acoes .btn {
+  flex: 1;
+}
+
+.colar-link {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.colar-link input {
   flex: 1;
 }
 
