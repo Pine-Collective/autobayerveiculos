@@ -6,15 +6,17 @@
     <title>Painel do estoque | Autobayer</title>
     <meta name="robots" content="noindex, nofollow" />
     <meta name="theme-color" content="#090a0c" />
-    <link rel="icon" href="../assets/favicon.svg" type="image/svg+xml" />
-    <link rel="stylesheet" href="admin.css" />
+    <!-- Caminhos absolutos de propósito: servido em /admin (sem barra final),
+         um caminho relativo resolveria para /admin.css e daria 404. -->
+    <link rel="icon" href="/assets/favicon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="/admin/admin.css" />
   </head>
 
   <body>
     <!-- Tela de login -->
     <div class="login" id="telaLogin">
       <form class="login-card" id="formLogin">
-        <img src="../assets/logo-autobayer.png" alt="Autobayer Veículos" width="430" height="160" />
+        <img src="/assets/logo-autobayer.png" alt="Autobayer Veículos" width="430" height="160" />
         <h1>Painel do estoque</h1>
         <label for="senha">Senha</label>
         <input id="senha" type="password" autocomplete="current-password" required />
@@ -28,7 +30,7 @@
       <header class="barra">
         <div class="barra-inner">
           <img
-            src="../assets/logo-autobayer.png"
+            src="/assets/logo-autobayer.png"
             alt="Autobayer"
             width="430"
             height="160"
@@ -45,9 +47,7 @@
         <div class="acoes">
           <div class="resumo" id="resumo"></div>
           <div class="acoes-botoes">
-            <a class="btn btn-ghost" href="../index.html" target="_blank" rel="noopener">
-              Ver o site ↗
-            </a>
+            <a class="btn btn-ghost" href="/" target="_blank" rel="noopener"> Ver o site ↗ </a>
             <button class="btn btn-secundario" id="botaoNovo" type="button">+ Novo veículo</button>
           </div>
         </div>
@@ -172,6 +172,6 @@
       </div>
     </div>
 
-    <script src="admin.js"></script>
+    <script src="/admin/admin.js"></script>
   </body>
 </html>

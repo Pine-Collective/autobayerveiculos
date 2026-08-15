@@ -50,12 +50,13 @@
 
   /**
    * O caminho guardado é sempre relativo à raiz ("assets/veiculos/x.webp"),
-   * porque quem consome é o index.html na raiz. Como o painel mora em /admin/,
-   * ele precisa de "../" só na hora de exibir. Links completos (http) passam
-   * direto.
+   * porque quem consome é o index.html na raiz. Para exibir aqui dentro do
+   * painel usamos a barra inicial, que funciona tanto em /admin quanto em
+   * /admin/. Links completos (http) passam direto.
    */
   function urlExibicao(src) {
-    return /^(https?:)?\/\//.test(src) ? src : `../${src}`;
+    if (!src) return '';
+    return /^(https?:)?\/\//.test(src) ? src : `/${src.replace(/^\/+/, '')}`;
   }
 
   function gerarSlug(brand, model, year) {

@@ -404,7 +404,10 @@ const interceptor = requestInterceptor(async (request) => {
 
 const htmlAdmin = await readFile(join(root, 'admin/index.html'), 'utf8');
 const dom = new JSDOM(htmlAdmin, {
-  url: `${ORIGEM}/admin/`,
+  // SEM barra final, de propósito: é assim que o Vercel serve /admin. Com a
+  // barra, um caminho relativo como "admin.css" funcionaria no teste e daria
+  // 404 em produção — foi exatamente o que aconteceu na primeira publicação.
+  url: `${ORIGEM}/admin`,
   runScripts: 'dangerously',
   resources: { interceptors: [interceptor] },
   pretendToBeVisual: true,
@@ -426,7 +429,7 @@ await tick();
  * mesmo lugar onde mostraria "Senha incorreta".
  */
 window.fetch = async (endereco, opcoes = {}) => {
-  const url = new URL(endereco, `${ORIGEM}/admin/`);
+  const url = new URL(endereco, `${ORIGEM}/admin`);
   const handlers = { login, vehicles, upload };
   const handler = handlers[url.pathname.replace('/api/', '')];
 
@@ -453,6 +456,21 @@ const qq = (s) => Array.from(doc.querySelectorAll(s));
 
 check('painel começa escondido, login visível', q('#painel').hidden && !q('#telaLogin').hidden);
 check('página do admin pede para não ser indexada', !!q('meta[name="robots"][content*="noindex"]'));
+
+// Guarda contra a regressão de caminhos: qualquer referência local relativa
+// quebra quando o Vercel serve /admin sem barra final.
+const referencias = [
+  ...qq('link[href]').map((el) => el.getAttribute('href')),
+  ...qq('script[src]').map((el) => el.getAttribute('src')),
+  ...qq('img[src]').map((el) => el.getAttribute('src'))
+];
+const relativas = referencias.filter((ref) => !/^(https?:)?\/\//.test(ref) && !ref.startsWith('/'));
+check(
+  'todo asset local usa caminho absoluto',
+  relativas.length === 0,
+  `relativos: ${relativas.join(', ')}`
+);
+check('folha de estilo do admin carregou', Boolean(q('link[href="/admin/admin.css"]')));
 check('menus foram preenchidos', qq('#f-type option').length === 4);
 check('menu de selos inclui a opção vazia', qq('#f-badge option').length === 5);
 
