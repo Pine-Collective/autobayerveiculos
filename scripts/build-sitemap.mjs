@@ -20,10 +20,10 @@ function loadBrowserGlobals(...files) {
   return sandbox.window;
 }
 
-const { AUTOBAYER_CONFIG: config, AUTOBAYER_VEHICLES: vehicles } = loadBrowserGlobals(
-  'js/config.js',
-  'js/vehicles.js'
-);
+const { AUTOBAYER_CONFIG: config } = loadBrowserGlobals('js/config.js');
+
+// O estoque vem do JSON (fonte da verdade), não do js/vehicles.js gerado.
+const vehicles = JSON.parse(readFileSync(join(root, 'data/vehicles.json'), 'utf8'));
 
 const baseUrl = config.siteUrl.replace(/\/$/, '');
 const today = new Date().toISOString().slice(0, 10);

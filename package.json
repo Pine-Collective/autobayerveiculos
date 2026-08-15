@@ -2,16 +2,22 @@
   "name": "autobayer-veiculos",
   "version": "1.0.0",
   "private": true,
+  "type": "module",
   "description": "Site institucional e catálogo de estoque da Autobayer Veículos.",
   "scripts": {
+    "data": "node scripts/build-data.mjs",
+    "predev": "npm run data",
     "dev": "npx --yes serve . -l 3000",
+    "pretest": "npm run data",
     "format": "prettier --write \"**/*.{html,css,js,json,md}\"",
     "format:check": "prettier --check \"**/*.{html,css,js,json,md}\"",
-    "test": "node scripts/smoke-test.mjs",
+    "test": "npm run test:site && npm run test:admin",
+    "test:site": "node scripts/smoke-test.mjs",
+    "test:admin": "node scripts/test-admin.mjs",
     "test:build": "npm run build && node scripts/smoke-test.mjs public",
     "sitemap": "node scripts/build-sitemap.mjs",
     "images": "node scripts/build-images.mjs",
-    "build": "npm run sitemap && npm run images && node scripts/build-site.mjs"
+    "build": "npm run data && npm run sitemap && npm run images && node scripts/build-site.mjs"
   },
   "devDependencies": {
     "jsdom": "^30.0.1",

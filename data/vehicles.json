@@ -1,0 +1,122 @@
+[
+  {
+    "id": 1,
+    "slug": "jeep-compass-limited-2022",
+    "brand": "Jeep",
+    "model": "Compass Limited",
+    "year": 2022,
+    "type": "SUV",
+    "km": 42300,
+    "price": 154900,
+    "images": [
+      "https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?auto=format&fit=crop&w=900&q=85"
+    ],
+    "badge": "Destaque",
+    "featured": true,
+    "sold": false,
+    "fuel": "Flex",
+    "gear": "Automático",
+    "color": "Cinza grafite",
+    "doors": 4
+  },
+  {
+    "id": 2,
+    "slug": "toyota-corolla-xei-2021",
+    "brand": "Toyota",
+    "model": "Corolla XEi",
+    "year": 2021,
+    "type": "Sedan",
+    "km": 38100,
+    "price": 119900,
+    "images": [
+      "https://images.unsplash.com/photo-1621007947382-bb3c3994e3fb?auto=format&fit=crop&w=900&q=85"
+    ],
+    "badge": "Único dono",
+    "featured": true,
+    "sold": false,
+    "fuel": "Flex",
+    "gear": "Automático",
+    "color": "Prata",
+    "doors": 4
+  },
+  {
+    "id": 3,
+    "slug": "volkswagen-t-cross-highline-2023",
+    "brand": "Volkswagen",
+    "model": "T-Cross Highline",
+    "year": 2023,
+    "type": "SUV",
+    "km": 21800,
+    "price": 138500,
+    "images": [
+      "https://images.unsplash.com/photo-1549317661-bd32c8ce0db2?auto=format&fit=crop&w=900&q=85"
+    ],
+    "badge": "Oferta",
+    "featured": false,
+    "sold": false,
+    "fuel": "Flex",
+    "gear": "Automático",
+    "color": "Branco",
+    "doors": 4
+  },
+  {
+    "id": 4,
+    "slug": "honda-civic-touring-2020",
+    "brand": "Honda",
+    "model": "Civic Touring",
+    "year": 2020,
+    "type": "Sedan",
+    "km": 56900,
+    "price": 144900,
+    "images": [
+      "https://images.unsplash.com/photo-1553440569-bcc63803a83d?auto=format&fit=crop&w=900&q=85"
+    ],
+    "badge": "",
+    "featured": false,
+    "sold": false,
+    "fuel": "Gasolina",
+    "gear": "Automático",
+    "color": "Preto",
+    "doors": 4
+  },
+  {
+    "id": 5,
+    "slug": "chevrolet-onix-premier-2022",
+    "brand": "Chevrolet",
+    "model": "Onix Premier",
+    "year": 2022,
+    "type": "Hatch",
+    "km": 31500,
+    "price": 82900,
+    "images": [
+      "https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?auto=format&fit=crop&w=900&q=85"
+    ],
+    "badge": "Oferta",
+    "featured": false,
+    "sold": false,
+    "fuel": "Flex",
+    "gear": "Automático",
+    "color": "Vermelho",
+    "doors": 4
+  },
+  {
+    "id": 6,
+    "slug": "ford-ranger-limited-2021",
+    "brand": "Ford",
+    "model": "Ranger Limited",
+    "year": 2021,
+    "type": "Picape",
+    "km": 64200,
+    "price": 189900,
+    "images": [
+      "https://images.unsplash.com/photo-1551830820-330a71b99659?auto=format&fit=crop&w=900&q=85"
+    ],
+    "badge": "",
+    "featured": false,
+    "sold": false,
+    "fuel": "Diesel",
+    "gear": "Automático",
+    "color": "Branco",
+    "doors": 4
+  }
+]

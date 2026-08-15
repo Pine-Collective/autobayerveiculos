@@ -17,7 +17,7 @@ const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const outDir = join(root, 'public');
 
 /** Tudo que compõe o site publicado. */
-const ENTRIES = ['index.html', 'robots.txt', 'sitemap.xml', 'css', 'js', 'assets'];
+const ENTRIES = ['index.html', 'robots.txt', 'sitemap.xml', 'css', 'js', 'assets', 'admin'];
 
 await rm(outDir, { recursive: true, force: true });
 await mkdir(outDir, { recursive: true });

@@ -1,0 +1,798 @@
+/* =====================================================================
+   Painel do estoque — Autobayer
+   Mesma identidade do site, mas com alvos de toque maiores: quem usa isto
+   costuma estar no celular, no pátio, com o carro na frente.
+   ================================================================== */
+
+:root {
+  --bg: #090a0c;
+  --surface: #111316;
+  --surface-2: #171a1e;
+  --line: #2a2d32;
+  --text: #f3f3f1;
+  --muted: #9a9da3;
+  --red: #d21f2b;
+  --red2: #ff3946;
+  --verde: #1f9d55;
+  --focus: #ff7b85;
+  --display: 'Barlow Condensed', 'Arial Narrow', sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family:
+    'DM Sans',
+    -apple-system,
+    'Segoe UI',
+    system-ui,
+    sans-serif;
+  font-size: 15px;
+  -webkit-text-size-adjust: 100%;
+}
+
+img {
+  max-width: 100%;
+}
+
+:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 3px;
+  border-radius: 3px;
+}
+
+/* ---------------------------------------------------------------- */
+/* Botões                                                            */
+/* ---------------------------------------------------------------- */
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 11px 18px;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  font:
+    700 13px/1 'DM Sans',
+    sans-serif;
+  cursor: pointer;
+  transition: 0.16s;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.btn:disabled {
+  opacity: 0.42;
+  cursor: not-allowed;
+}
+
+.btn-primary {
+  background: var(--red);
+  color: #fff;
+}
+
+.btn-primary:not(:disabled):hover {
+  background: var(--red2);
+}
+
+.btn-secundario {
+  background: var(--surface-2);
+  border-color: var(--line);
+  color: var(--text);
+}
+
+.btn-secundario:hover {
+  border-color: #6a6d75;
+}
+
+.btn-ghost {
+  background: none;
+  border-color: var(--line);
+  color: var(--muted);
+}
+
+.btn-ghost:hover {
+  color: #fff;
+  border-color: #6a6d75;
+}
+
+.btn-perigo {
+  background: none;
+  border-color: #5c2126;
+  color: #e5737d;
+}
+
+.btn-perigo:hover {
+  background: #2a1113;
+  color: #ff9aa2;
+}
+
+/* ---------------------------------------------------------------- */
+/* Login                                                             */
+/* ---------------------------------------------------------------- */
+
+.login {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: radial-gradient(ellipse at 50% 35%, #1d2025 0, #0d0f12 45%, #090a0c 100%);
+}
+
+.login-card {
+  width: min(100%, 380px);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 34px 30px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.login-card img {
+  width: 165px;
+  height: auto;
+  margin: 0 auto 6px;
+}
+
+.login-card h1 {
+  font-family: var(--display);
+  text-transform: uppercase;
+  font-size: 27px;
+  margin: 0 0 10px;
+  text-align: center;
+  letter-spacing: 0.02em;
+}
+
+.login-card label {
+  font-size: 12px;
+  color: var(--muted);
+  font-weight: 700;
+}
+
+/* ---------------------------------------------------------------- */
+/* Campos                                                            */
+/* ---------------------------------------------------------------- */
+
+input[type='text'],
+input[type='password'],
+input[type='number'],
+input:not([type]),
+select {
+  width: 100%;
+  min-height: 44px;
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  color: var(--text);
+  padding: 11px 13px;
+  font: inherit;
+  font-size: 15px; /* 16px ou menos evita zoom automático no iOS */
+}
+
+input:focus,
+select:focus {
+  outline: none;
+  border-color: #6a6d75;
+}
+
+select option {
+  background: var(--surface);
+  color: var(--text);
+}
+
+.campo {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex: 1;
+  min-width: 0;
+}
+
+.campo label,
+.campo .rotulo {
+  font-size: 12px;
+  color: var(--muted);
+  font-weight: 700;
+}
+
+.campo small {
+  font-size: 11px;
+  color: var(--muted);
+  min-height: 14px;
+}
+
+.campo-linha {
+  display: flex;
+  gap: 12px;
+}
+
+.ajuda {
+  font-size: 12px;
+  color: var(--muted);
+  margin: 0 0 4px;
+  line-height: 1.5;
+}
+
+.aviso {
+  background: #2a1113;
+  border: 1px solid #5c2126;
+  color: #ffb3ba;
+  border-radius: 4px;
+  padding: 11px 13px;
+  font-size: 13px;
+  margin: 4px 0 0;
+  line-height: 1.5;
+}
+
+.aviso ul {
+  margin: 6px 0 0;
+  padding-left: 18px;
+}
+
+/* ---------------------------------------------------------------- */
+/* Barra superior                                                    */
+/* ---------------------------------------------------------------- */
+
+.barra {
+  background: #0b0c0f;
+  border-bottom: 1px solid var(--line);
+  position: sticky;
+  top: 0;
+  z-index: 5;
+}
+
+.barra-inner {
+  max-width: 1000px;
+  margin: auto;
+  padding: 12px 20px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.barra-logo {
+  width: 118px;
+  height: auto;
+}
+
+.barra-titulo {
+  font-family: var(--display);
+  text-transform: uppercase;
+  font-size: 20px;
+  color: var(--muted);
+  margin-right: auto;
+}
+
+.pendencias {
+  background: #3a2a12;
+  border: 1px solid #6b4d1f;
+  color: #f0c674;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 6px 10px;
+  border-radius: 20px;
+  white-space: nowrap;
+}
+
+/* ---------------------------------------------------------------- */
+/* Conteúdo                                                          */
+/* ---------------------------------------------------------------- */
+
+.conteudo {
+  max-width: 1000px;
+  margin: auto;
+  padding: 24px 20px 80px;
+}
+
+.acoes {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+  margin-bottom: 18px;
+}
+
+.resumo {
+  color: var(--muted);
+  font-size: 13px;
+  margin-right: auto;
+}
+
+.resumo strong {
+  color: var(--text);
+}
+
+.acoes-botoes {
+  display: flex;
+  gap: 10px;
+}
+
+.faixa {
+  border-radius: 4px;
+  padding: 12px 14px;
+  font-size: 13px;
+  margin: 0 0 16px;
+  line-height: 1.5;
+}
+
+.faixa.sucesso {
+  background: #102a1b;
+  border: 1px solid #1f5c37;
+  color: #86e2ab;
+}
+
+.faixa.erro {
+  background: #2a1113;
+  border: 1px solid #5c2126;
+  color: #ffb3ba;
+}
+
+.faixa.info {
+  background: #10202e;
+  border: 1px solid #1f4a6b;
+  color: #8ecbf0;
+}
+
+/* ---------------------------------------------------------------- */
+/* Lista de veículos                                                 */
+/* ---------------------------------------------------------------- */
+
+.lista {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.item {
+  background: var(--surface);
+  border: 1px solid #22252a;
+  border-radius: 6px;
+  padding: 12px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.item.vendido {
+  opacity: 0.58;
+}
+
+.item-foto {
+  width: 84px;
+  height: 62px;
+  object-fit: cover;
+  border-radius: 4px;
+  background: #202226;
+  flex: none;
+}
+
+.item.vendido .item-foto {
+  filter: grayscale(1);
+}
+
+.item-dados {
+  flex: 1;
+  min-width: 0;
+}
+
+.item-nome {
+  font-family: var(--display);
+  font-size: 21px;
+  text-transform: uppercase;
+  margin: 0;
+  line-height: 1.1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.item-sub {
+  color: var(--muted);
+  font-size: 12px;
+  margin: 3px 0 0;
+}
+
+.item-preco {
+  font-weight: 700;
+  font-size: 15px;
+  margin-top: 2px;
+  display: block;
+}
+
+.etiqueta {
+  display: inline-block;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 3px 7px;
+  border-radius: 3px;
+  margin-left: 6px;
+  vertical-align: 1px;
+}
+
+.etiqueta-vendido {
+  background: #303338;
+  color: #d6d8db;
+}
+
+.etiqueta-destaque {
+  background: #3a2a12;
+  color: #f0c674;
+}
+
+.item-acoes {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex: none;
+}
+
+/* Interruptor de "vendido" — a ação mais usada do painel. */
+.interruptor {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  cursor: pointer;
+  font-size: 12px;
+  color: var(--muted);
+  font-weight: 700;
+  user-select: none;
+  white-space: nowrap;
+}
+
+.interruptor input {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.trilho {
+  width: 44px;
+  height: 26px;
+  background: #303338;
+  border-radius: 20px;
+  position: relative;
+  transition: 0.18s;
+  flex: none;
+}
+
+.trilho::after {
+  content: '';
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 20px;
+  height: 20px;
+  background: #fff;
+  border-radius: 50%;
+  transition: 0.18s;
+}
+
+.interruptor input:checked + .trilho {
+  background: var(--verde);
+}
+
+.interruptor input:checked + .trilho::after {
+  transform: translateX(18px);
+}
+
+.interruptor input:focus-visible + .trilho {
+  outline: 2px solid var(--focus);
+  outline-offset: 3px;
+}
+
+.vazio {
+  text-align: center;
+  color: var(--muted);
+  padding: 60px 20px;
+  line-height: 1.6;
+}
+
+/* ---------------------------------------------------------------- */
+/* Editor                                                            */
+/* ---------------------------------------------------------------- */
+
+.modal {
+  position: fixed;
+  inset: 0;
+  background: #000d;
+  z-index: 20;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 20px;
+  overflow-y: auto;
+}
+
+.modal[hidden] {
+  display: none;
+}
+
+.modal-caixa {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  width: min(100%, 620px);
+  margin: auto;
+}
+
+.modal-topo {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 22px;
+  border-bottom: 1px solid var(--line);
+  position: sticky;
+  top: 0;
+  background: var(--surface);
+  border-radius: 8px 8px 0 0;
+  z-index: 1;
+}
+
+.modal-topo h2 {
+  font-family: var(--display);
+  text-transform: uppercase;
+  font-size: 24px;
+  margin: 0;
+}
+
+.fechar {
+  background: none;
+  border: 0;
+  color: var(--muted);
+  font-size: 30px;
+  line-height: 1;
+  cursor: pointer;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+}
+
+.fechar:hover {
+  color: #fff;
+  background: var(--surface-2);
+}
+
+.formulario {
+  padding: 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.marcadores {
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 14px 16px;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.marcadores legend {
+  font-size: 12px;
+  color: var(--muted);
+  font-weight: 700;
+  padding: 0 6px;
+}
+
+.marcador {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  cursor: pointer;
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.marcador input {
+  width: 20px;
+  height: 20px;
+  flex: none;
+  accent-color: var(--red);
+}
+
+/* Galeria de fotos */
+
+.galeria {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(104px, 1fr));
+  gap: 9px;
+  margin-bottom: 11px;
+}
+
+.galeria:empty {
+  display: none;
+}
+
+.foto {
+  position: relative;
+  aspect-ratio: 4 / 3;
+  border-radius: 4px;
+  overflow: hidden;
+  background: #202226;
+  border: 2px solid transparent;
+}
+
+.foto.capa {
+  border-color: var(--red);
+}
+
+.foto img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.foto-capa-marca {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  background: var(--red);
+  color: #fff;
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  padding: 3px 6px;
+  letter-spacing: 0.06em;
+}
+
+.foto-botoes {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  display: flex;
+  gap: 4px;
+}
+
+.foto-botao {
+  width: 26px;
+  height: 26px;
+  border: 0;
+  border-radius: 4px;
+  background: #08090ae0;
+  color: #fff;
+  font-size: 14px;
+  line-height: 1;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+}
+
+.foto-botao:hover {
+  background: var(--red);
+}
+
+.galeria-acoes {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.galeria-acoes .btn {
+  flex: 1;
+}
+
+.progresso {
+  font-size: 12px;
+  color: var(--muted);
+  margin: 10px 0 0;
+}
+
+.modal-rodape {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  border-top: 1px solid var(--line);
+  padding-top: 18px;
+  margin-top: 4px;
+}
+
+.modal-rodape-direita {
+  display: flex;
+  gap: 10px;
+}
+
+/* ---------------------------------------------------------------- */
+/* Celular                                                           */
+/* ---------------------------------------------------------------- */
+
+@media (max-width: 620px) {
+  .barra-titulo {
+    display: none;
+  }
+
+  .barra-inner {
+    padding: 10px 14px;
+    gap: 8px;
+  }
+
+  .barra-logo {
+    margin-right: auto;
+  }
+
+  .conteudo {
+    padding: 18px 14px 60px;
+  }
+
+  .acoes-botoes {
+    width: 100%;
+  }
+
+  .acoes-botoes .btn {
+    flex: 1;
+  }
+
+  .item {
+    flex-wrap: wrap;
+  }
+
+  .item-foto {
+    width: 68px;
+    height: 52px;
+  }
+
+  .item-acoes {
+    width: 100%;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    border-top: 1px solid #22252a;
+    padding-top: 11px;
+  }
+
+  .campo-linha {
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .modal {
+    padding: 0;
+  }
+
+  .modal-caixa {
+    border-radius: 0;
+    border: 0;
+    min-height: 100vh;
+  }
+
+  .modal-topo {
+    border-radius: 0;
+  }
+
+  .modal-rodape {
+    flex-direction: column-reverse;
+    align-items: stretch;
+  }
+
+  .modal-rodape-direita {
+    width: 100%;
+  }
+
+  .modal-rodape-direita .btn {
+    flex: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    transition-duration: 0.01ms !important;
+  }
+}

@@ -1,4 +1,10 @@
 User-agent: *
 Allow: /
 
+# O painel do estoque e a API não devem ser indexados. Isto não é proteção —
+# quem protege é a senha exigida pelas funções em /api. É só para o painel não
+# aparecer em busca.
+Disallow: /admin
+Disallow: /api
+
 Sitemap: https://www.autobayerveiculos.com.br/sitemap.xml

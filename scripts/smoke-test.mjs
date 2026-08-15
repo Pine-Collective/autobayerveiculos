@@ -124,7 +124,11 @@ check(
   /6 veículos encontrados/.test($('#resultCount').textContent),
   JSON.stringify($('#resultCount').textContent)
 );
-check('nenhum erro de script no carregamento', consoleErrors.length === 0, consoleErrors.join(' | '));
+check(
+  'nenhum erro de script no carregamento',
+  consoleErrors.length === 0,
+  consoleErrors.join(' | ')
+);
 
 /* ------------------------------------------------------------------ */
 console.log('\n2. Filtro de preço');
@@ -156,14 +160,15 @@ console.log('\n3. Abas de tipo, marca e contadores automáticos');
 /* ------------------------------------------------------------------ */
 
 const tabs = $$('#categoryRow .category');
-check('5 abas geradas a partir dos dados (Todos + 4 tipos)', tabs.length === 5, `${tabs.length} abas`);
+check(
+  '5 abas geradas a partir dos dados (Todos + 4 tipos)',
+  tabs.length === 5,
+  `${tabs.length} abas`
+);
 
 const suvTab = tabs.find((t) => t.dataset.category === 'SUV');
 check('contador de SUV calculado dos dados', suvTab.querySelector('small').textContent === '02');
-check(
-  'contador de Todos calculado dos dados',
-  tabs[0].querySelector('small').textContent === '06'
-);
+check('contador de Todos calculado dos dados', tabs[0].querySelector('small').textContent === '06');
 
 suvTab.dispatchEvent(new window.MouseEvent('click', { bubbles: true }));
 check('clicar em SUV filtra para 2', cards().length === 2, `${cards().length} cards`);
@@ -171,7 +176,11 @@ check('aba SUV marcada como pressionada', suvTab.getAttribute('aria-pressed') ==
 check('aba Todos desmarcada', tabs[0].getAttribute('aria-pressed') === 'false');
 
 const brandOptions = $$('#brandFilter option');
-check('marcas geradas dos dados (6 + "todas")', brandOptions.length === 7, `${brandOptions.length}`);
+check(
+  'marcas geradas dos dados (6 + "todas")',
+  brandOptions.length === 7,
+  `${brandOptions.length}`
+);
 
 setSelect('#brandFilter', 'Jeep');
 check('SUV + Jeep = 1 veículo (filtros combinam)', cards().length === 1, `${cards().length}`);
@@ -269,17 +278,22 @@ check(
   'coração continua marcado após o re-render',
   $('[data-heart="1"]').getAttribute('aria-pressed') === 'true'
 );
-check('aria-label do coração se inverte', /Remover/.test($('[data-heart="1"]').ariaLabel || $('[data-heart="1"]').getAttribute('aria-label')));
-check('botão de favoritos aparece com contagem', !$('#favToggle').hidden && $('#favCount').textContent === '(1)');
+check(
+  'aria-label do coração se inverte',
+  /Remover/.test(
+    $('[data-heart="1"]').ariaLabel || $('[data-heart="1"]').getAttribute('aria-label')
+  )
+);
+check(
+  'botão de favoritos aparece com contagem',
+  !$('#favToggle').hidden && $('#favCount').textContent === '(1)'
+);
 
 $('#favToggle').dispatchEvent(new window.MouseEvent('click', { bubbles: true }));
 check('filtro "só favoritos" mostra apenas 1', cards().length === 1, `${cards().length}`);
 $('#favToggle').dispatchEvent(new window.MouseEvent('click', { bubbles: true }));
 
-check(
-  'clicar no coração não abre o modal',
-  !$('#modalBackdrop').classList.contains('open')
-);
+check('clicar no coração não abre o modal', !$('#modalBackdrop').classList.contains('open'));
 
 /* ------------------------------------------------------------------ */
 console.log('\n9. Modal, deep link e foco');
@@ -389,7 +403,10 @@ check(
   'imagens de card têm loading=lazy',
   cards().every((c) => c.querySelector('img').getAttribute('loading') === 'lazy')
 );
-check('ano do rodapé é dinâmico', $('[data-year]').textContent === String(new Date().getFullYear()));
+check(
+  'ano do rodapé é dinâmico',
+  $('[data-year]').textContent === String(new Date().getFullYear())
+);
 check(
   'links do WhatsApp montados a partir do config',
   $$('[data-wa-link]').every((a) => a.href.startsWith('https://wa.me/5511999990000?text='))
@@ -466,9 +483,7 @@ check(
 
 /* ------------------------------------------------------------------ */
 
-console.log(
-  `\n${'─'.repeat(56)}\n${passed} verificações passaram, ${failures.length} falharam.`
-);
+console.log(`\n${'─'.repeat(56)}\n${passed} verificações passaram, ${failures.length} falharam.`);
 if (failures.length) {
   console.log('\nFalhas:');
   failures.forEach((f) => console.log(`  · ${f}`));
