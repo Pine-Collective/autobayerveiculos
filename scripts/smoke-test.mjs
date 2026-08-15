@@ -2,16 +2,21 @@
  * Teste de fumaça: carrega index.html num DOM real (jsdom), executa os scripts
  * do site e verifica os fluxos principais do catálogo.
  *
- *   npm test
+ *   npm test          testa os fontes na raiz
+ *   npm run test:build  testa a pasta public/ que vai para produção
  */
 import jsdom from 'jsdom';
 import { readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
-import { dirname, join } from 'node:path';
+import { dirname, join, resolve } from 'node:path';
 
 const { JSDOM, VirtualConsole, requestInterceptor } = jsdom;
 
-const root = join(dirname(fileURLToPath(import.meta.url)), '..');
+const projectRoot = join(dirname(fileURLToPath(import.meta.url)), '..');
+
+// Aceita um diretório como argumento para validar também o build gerado.
+const root = process.argv[2] ? resolve(process.argv[2]) : projectRoot;
+console.log(`Testando: ${root}`);
 
 let passed = 0;
 const failures = [];

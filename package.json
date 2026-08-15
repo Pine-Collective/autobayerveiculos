@@ -8,9 +8,10 @@
     "format": "prettier --write \"**/*.{html,css,js,json,md}\"",
     "format:check": "prettier --check \"**/*.{html,css,js,json,md}\"",
     "test": "node scripts/smoke-test.mjs",
+    "test:build": "npm run build && node scripts/smoke-test.mjs public",
     "sitemap": "node scripts/build-sitemap.mjs",
     "images": "node scripts/build-images.mjs",
-    "build": "npm run sitemap && npm run images"
+    "build": "npm run sitemap && npm run images && node scripts/build-site.mjs"
   },
   "devDependencies": {
     "jsdom": "^30.0.1",

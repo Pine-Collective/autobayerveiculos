@@ -1,7 +1,8 @@
 # Autobayer Veículos
 
 Site institucional e catálogo de estoque. Site estático — HTML, CSS e JavaScript
-puro, sem framework e sem etapa de build para publicar.
+puro, sem framework. O build só gera assets derivados (sitemap, imagens) e copia
+os arquivos para `public/`; não há bundler nem transpilação.
 
 ## Rodando localmente
 
@@ -22,8 +23,25 @@ js/config.js            telefone, WhatsApp, endereço, domínio, ID do GA4
 js/vehicles.js          o estoque — é aqui que se cadastra carro
 js/app.js               catálogo, filtros, modal, favoritos
 assets/                 logo, favicon, imagem de compartilhamento
-scripts/                geradores de sitemap e de imagens
+scripts/                build, geradores de sitemap/imagens e testes
+public/                 saída do build (gerada; fora do Git)
 ```
+
+## Publicação
+
+O deploy é automático a cada push na `main`.
+
+```bash
+npm run build       # gera sitemap + imagens e monta public/
+npm run test:build  # faz o build e roda os testes contra public/
+```
+
+`public/` é o diretório de saída padrão do Vercel, Netlify e Cloudflare Pages —
+não é preciso configurar nada no painel. Ficam de fora do que é publicado:
+`node_modules`, `scripts/`, `package.json` e os arquivos de configuração.
+
+Se algum dia o build for removido, lembre de apontar o Output Directory do
+provedor para a raiz do projeto.
 
 ## Tarefas do dia a dia
 
