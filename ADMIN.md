@@ -34,27 +34,42 @@ de ambiente do Vercel, usadas pelas funções do lado do servidor.
 
 ## Configuração (uma vez só)
 
-### 1. Criar o token do GitHub
+São dois lugares diferentes, e é fácil confundir: as **permissões** ficam no
+GitHub, na tela onde o token é criado. No Vercel vai só a **string do token**.
+
+### 1. Criar o token no GitHub
 
 1. GitHub → **Settings → Developer settings → Personal access tokens →
    Fine-grained tokens → Generate new token**
-2. **Repository access:** somente `Pine-Collective/autobayerveiculos`
-3. **Permissions → Repository permissions → Contents: Read and write**
-   (só isso — nenhuma outra permissão é necessária)
+2. **Repository access → Only select repositories:**
+   `Pine-Collective/autobayerveiculos`
+3. **Permissions → Repository permissions → Contents:** mude para
+   **Read and write** (só esta — nenhuma outra é necessária)
 4. Defina uma validade e anote a data para renovar
+5. **Generate token** e copie a string que aparecer
+
+> O GitHub mostra o token **uma única vez**. Se fechar a página sem copiar,
+> não dá para recuperar — só gerar outro.
 
 ### 2. Definir as variáveis no Vercel
 
 Projeto → **Settings → Environment Variables**. Marque os três ambientes
 (Production, Preview, Development):
 
-| Variável         | Valor                                     | Obrigatória         |
-| ---------------- | ----------------------------------------- | ------------------- |
-| `ADMIN_PASSWORD` | senha da equipe, **mínimo 12 caracteres** | sim                 |
-| `GITHUB_TOKEN`   | o token do passo 1                        | sim                 |
-| `GITHUB_REPO`    | `Pine-Collective/autobayerveiculos`       | sim                 |
-| `GITHUB_BRANCH`  | `main`                                    | não (padrão `main`) |
-| `ADMIN_SECRET`   | texto aleatório longo                     | não (veja abaixo)   |
+| Variável         | O que colar no campo "Value"                          | Obrigatória         |
+| ---------------- | ----------------------------------------------------- | ------------------- |
+| `ADMIN_PASSWORD` | a senha da equipe, **mínimo 12 caracteres**           | sim                 |
+| `GITHUB_TOKEN`   | a string copiada no passo 1, começa com `github_pat_` | sim                 |
+| `GITHUB_REPO`    | `Pine-Collective/autobayerveiculos`                   | sim                 |
+| `GITHUB_BRANCH`  | `main`                                                | não (padrão `main`) |
+| `ADMIN_SECRET`   | um texto aleatório longo                              | não (veja abaixo)   |
+
+Nada de "Contents: Read and write" vai aqui — isso foi configurado no passo 1,
+dentro do GitHub. O campo "Value" do `GITHUB_TOKEN` recebe só o token:
+
+```
+github_pat_11ABCDE0Y0aBcDeFgHiJkL_mNoPqRsTuVwXyZ1234567890abcdefGHIJKL
+```
 
 `ADMIN_SECRET` assina os tokens de sessão. Se você não definir, ele é derivado
 da própria senha — o que funciona bem e tem um efeito desejável: **trocar a
@@ -137,13 +152,13 @@ refaz a alteração.
 
 ## Problemas comuns
 
-| Sintoma                                          | Causa provável                                             |
-| ------------------------------------------------ | ---------------------------------------------------------- |
-| "Admin não configurado"                          | `ADMIN_PASSWORD` ausente ou com menos de 12 caracteres     |
-| "Não foi possível salvar"                        | `GITHUB_TOKEN` vencido, ou sem permissão de Contents write |
-| Publicou mas o site não mudou                    | o build leva ~1 min; confira os deploys no Vercel          |
-| "Alguém salvou alterações enquanto você editava" | edição simultânea; recarregue e refaça                     |
-| Login não aceita a senha certa                   | variáveis só valem a partir do deploy seguinte             |
+| Sintoma                                          | Causa provável                                                                         |
+| ------------------------------------------------ | -------------------------------------------------------------------------------------- |
+| "Admin não configurado"                          | `ADMIN_PASSWORD` ausente ou com menos de 12 caracteres                                 |
+| "Não foi possível salvar"                        | `GITHUB_TOKEN` vencido, com o valor errado no campo, ou sem `Contents: Read and write` |
+| Publicou mas o site não mudou                    | o build leva ~1 min; confira os deploys no Vercel                                      |
+| "Alguém salvou alterações enquanto você editava" | edição simultânea; recarregue e refaça                                                 |
+| Login não aceita a senha certa                   | variáveis só valem a partir do deploy seguinte                                         |
 
 ---
 
