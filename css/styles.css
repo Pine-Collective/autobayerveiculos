@@ -42,6 +42,13 @@
   box-sizing: border-box;
 }
 
+/* [hidden] do navegador perde para qualquer regra de autor com classe.
+   Sem o !important, dar um display: a uma classe que também é escondida
+   pelo atributo hidden faz o elemento continuar visível. */
+[hidden] {
+  display: none !important;
+}
+
 html {
   scroll-behavior: smooth;
 }

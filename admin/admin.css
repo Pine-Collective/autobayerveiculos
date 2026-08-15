@@ -22,6 +22,15 @@
   box-sizing: border-box;
 }
 
+/* A regra [hidden] { display: none } vem da folha do navegador, que perde
+   para qualquer regra de autor com classe. Sem este !important, um
+   ".login { display: grid }" faz o atributo hidden não surtir efeito e a
+   tela de login nunca some depois do login — foi exatamente o que
+   aconteceu em produção. */
+[hidden] {
+  display: none !important;
+}
+
 body {
   margin: 0;
   background: var(--bg);
@@ -516,10 +525,6 @@ select option {
   justify-content: center;
   padding: 20px;
   overflow-y: auto;
-}
-
-.modal[hidden] {
-  display: none;
 }
 
 .modal-caixa {
