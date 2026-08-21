@@ -639,7 +639,7 @@ select option {
 }
 
 .vehicle-image {
-  height: 195px;
+  aspect-ratio: 3 / 4;
   position: relative;
   overflow: hidden;
   background: #202226;
@@ -648,7 +648,8 @@ select option {
 .vehicle-image img {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
+  background: #202226;
   transition: 0.4s;
 }
 
@@ -784,6 +785,152 @@ select option {
 .link-aviso a {
   color: #fff;
   text-decoration: underline;
+}
+
+/* Página individual do veículo */
+
+.vehicle-page {
+  min-height: 70vh;
+  padding: 44px 0 90px;
+  background: var(--bg);
+}
+
+.vehicle-page-inner {
+  max-width: 1180px;
+}
+
+.vehicle-page-back {
+  display: inline-block;
+  color: var(--muted);
+  font-size: 13px;
+  margin-bottom: 25px;
+}
+
+.vehicle-page-back:hover {
+  color: #fff;
+}
+
+.vehicle-page-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(360px, 0.85fr);
+  gap: 52px;
+  align-items: start;
+}
+
+.vehicle-page-main-media {
+  min-height: 420px;
+  display: grid;
+  place-items: center;
+  background: #202226;
+  border: 1px solid var(--line);
+}
+
+.vehicle-page-main-image {
+  display: block;
+  width: 100%;
+  max-height: 720px;
+  object-fit: contain;
+}
+
+.vehicle-page-thumbs {
+  display: flex;
+  gap: 9px;
+  overflow-x: auto;
+  padding-top: 12px;
+}
+
+.vehicle-page-thumb {
+  width: 76px;
+  height: 92px;
+  flex: none;
+  padding: 0;
+  border: 2px solid transparent;
+  background: #202226;
+  cursor: pointer;
+  overflow: hidden;
+}
+
+.vehicle-page-thumb.active {
+  border-color: var(--red);
+}
+
+.vehicle-page-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.vehicle-page-details h1 {
+  margin: 0 0 8px;
+  font-family: var(--display);
+  font-size: clamp(42px, 5vw, 72px);
+  line-height: 0.9;
+  text-transform: uppercase;
+}
+
+.vehicle-page-details h1 em {
+  color: var(--red2);
+  font-style: normal;
+}
+
+.vehicle-page-year {
+  color: var(--muted);
+  margin: 0 0 25px;
+}
+
+.vehicle-page-features {
+  margin-top: 28px;
+  border-top: 1px solid var(--line);
+  padding-top: 20px;
+}
+
+.vehicle-page-features h2 {
+  font-family: var(--display);
+  font-size: 23px;
+  text-transform: uppercase;
+  margin: 0 0 12px;
+}
+
+.vehicle-page-features ul {
+  columns: 2;
+  padding-left: 18px;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.8;
+}
+
+.vehicle-page-price {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  margin: 30px 0 18px;
+}
+
+.vehicle-page-price span,
+.vehicle-page-price small {
+  color: var(--muted);
+}
+
+.vehicle-page-price strong {
+  color: var(--red2);
+  font-family: var(--display);
+  font-size: 36px;
+}
+
+.vehicle-page-cta {
+  width: 100%;
+  justify-content: center;
+}
+
+.btn-whatsapp {
+  background: #19a957;
+  border-color: #19a957;
+  color: #fff;
+}
+
+.btn-whatsapp:hover {
+  background: #128c46;
+  border-color: #128c46;
 }
 
 .empty-state a {
@@ -1290,6 +1437,26 @@ footer {
 
   .vehicle-grid {
     grid-template-columns: 1fr;
+  }
+
+  .vehicle-page {
+    padding-top: 28px;
+  }
+
+  .vehicle-page-grid {
+    display: block;
+  }
+
+  .vehicle-page-main-media {
+    min-height: 0;
+  }
+
+  .vehicle-page-details {
+    padding-top: 30px;
+  }
+
+  .vehicle-page-features ul {
+    columns: 1;
   }
 
   .trust-grid {

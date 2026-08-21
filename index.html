@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Autobayer Veículos | Seminovos revisados em São Paulo</title>
+    <title>Autobayer Veículos | Seminovos em Pato Branco</title>
     <meta
       name="description"
       content="Catálogo de seminovos da Autobayer Veículos: SUVs, sedãs, hatches e picapes revisados, com procedência garantida e financiamento facilitado. Fale conosco pelo WhatsApp."
@@ -53,22 +53,30 @@
         "url": "__SITE_URL__/",
         "logo": "__SITE_URL__/assets/logo-autobayer.png",
         "image": "__SITE_URL__/assets/og-autobayer.jpg",
-        "telephone": "+5511999990000",
+        "telephone": "+554699226135",
         "priceRange": "$$",
         "address": {
           "@type": "PostalAddress",
-          "streetAddress": "Av. Exemplo, 1000",
-          "addressLocality": "São Paulo",
-          "addressRegion": "SP",
-          "postalCode": "01000-000",
+          "streetAddress": "Rua Itabira, 290",
+          "addressLocality": "Pato Branco",
+          "addressRegion": "PR",
+          "postalCode": "85501-047",
           "addressCountry": "BR"
         },
         "openingHoursSpecification": [
           {
             "@type": "OpeningHoursSpecification",
-            "dayOfWeek": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
-            "opens": "08:00",
-            "closes": "18:00"
+            "dayOfWeek": [
+              "Monday",
+              "Tuesday",
+              "Wednesday",
+              "Thursday",
+              "Friday",
+              "Saturday",
+              "Sunday"
+            ],
+            "opens": "00:00",
+            "closes": "23:59"
           }
         ]
       }
@@ -85,11 +93,11 @@
       <div class="container topbar-inner">
         <span>Compra, venda e troca com confiança</span>
         <span class="topbar-right">
-          Atendimento: Seg–Sex, 8h às 18h
+          Atendimento: 24 horas
           <i aria-hidden="true"></i>
           <!-- fallback sem JS: o número real vive em js/config.js -->
-          <a data-phone-link href="tel:+5511999990000"
-            ><span data-phone-text>(11) 99999-0000</span></a
+          <a data-phone-link href="tel:+554699226135"
+            ><span data-phone-text>WhatsApp (46) 9922-6135</span></a
           >
         </span>
       </div>
@@ -117,8 +125,8 @@
           <a href="#contato">Contato</a>
           <!-- Só aparece no painel mobile: no desktop o telefone já está no
                topo, mas no celular o topbar some e o número ficava invisível. -->
-          <a class="nav-phone" data-phone-link href="tel:+5511999990000">
-            <span aria-hidden="true">✆</span> <span data-phone-text>(11) 99999-0000</span>
+          <a class="nav-phone" data-phone-link href="tel:+554699226135">
+            <span aria-hidden="true">✆</span> <span data-phone-text>WhatsApp (46) 9922-6135</span>
           </a>
         </nav>
 
@@ -126,7 +134,7 @@
           class="header-whatsapp"
           data-wa-link
           data-cta="whatsapp-header"
-          href="https://wa.me/5511999990000"
+          href="https://wa.me/554699226135"
           target="_blank"
           rel="noopener"
         >
@@ -146,7 +154,7 @@
       </div>
     </header>
 
-    <main>
+    <main id="catalogMain">
       <section class="hero" id="inicio">
         <div class="hero-grid container">
           <div class="hero-copy">
@@ -213,7 +221,7 @@
               <label class="visually-hidden" for="priceFilter">Filtrar por preço</label>
               <select id="priceFilter">
                 <option value="all">Qualquer preço</option>
-                <option value="80000">Até R$ 80 mil</option>
+                <option value="8000">Até R$ 8 mil</option>
                 <option value="150000">Até R$ 150 mil</option>
                 <option value="250000">Até R$ 250 mil</option>
               </select>
@@ -249,7 +257,7 @@
             <a
               data-wa-link
               data-cta="whatsapp-link-morto"
-              href="https://wa.me/5511999990000"
+              href="https://wa.me/554699226135"
               target="_blank"
               rel="noopener"
               >chame no WhatsApp</a
@@ -266,7 +274,7 @@
           <noscript>
             <p class="empty-state">
               Ative o JavaScript para ver o estoque, ou fale direto conosco pelo WhatsApp
-              <a href="https://wa.me/5511999990000">(11) 99999-0000</a>.
+              <a href="https://wa.me/554699226135">WhatsApp (46) 9922-6135</a>.
             </p>
           </noscript>
         </div>
@@ -314,7 +322,7 @@
             class="btn btn-primary"
             data-wa-link
             data-cta="whatsapp-contato"
-            href="https://wa.me/5511999990000"
+            href="https://wa.me/554699226135"
             target="_blank"
             rel="noopener"
           >
@@ -323,6 +331,8 @@
         </div>
       </section>
     </main>
+
+    <main id="vehiclePage" class="vehicle-page" hidden></main>
 
     <footer>
       <div class="container footer-inner">
@@ -337,7 +347,7 @@
           />
         </picture>
         <span>© <span data-year>2026</span> Autobayer Veículos. Todos os direitos reservados.</span>
-        <span>São Paulo, SP</span>
+        <span>Pato Branco, PR</span>
       </div>
     </footer>
 

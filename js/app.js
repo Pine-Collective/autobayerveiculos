@@ -143,7 +143,9 @@
     clear: $('#clearFilters'),
     categoryRow: $('#categoryRow'),
     favToggle: $('#favToggle'),
-    favCount: $('#favCount')
+    favCount: $('#favCount'),
+    catalogMain: $('#catalogMain'),
+    vehiclePage: $('#vehiclePage')
   };
 
   /* ---------------------------------------------------------------------
@@ -411,6 +413,78 @@
       </div>`;
   }
 
+  function vehiclePageHtml(vehicle) {
+    const name = `${vehicle.brand} ${vehicle.model}`;
+    const message = vehicle.sold
+      ? `Olá! Vi que o ${name}${vehicle.year ? ` ${vehicle.year}` : ''} foi vendido. Vocês têm algo parecido?`
+      : `Olá! Tenho interesse no ${name}${vehicle.year ? ` ${vehicle.year}` : ''}, anunciado por ${formatPrice(vehicle.price)}.`;
+    const gallery = vehicle.images
+      .map(
+        (src, index) => `
+          <button class="vehicle-page-thumb${index === 0 ? ' active' : ''}" type="button" data-page-thumb="${escapeHtml(src)}" aria-label="Ver foto ${index + 1}">
+            <img src="${escapeHtml(src)}" alt="" loading="lazy" decoding="async">
+          </button>`
+      )
+      .join('');
+    const specs = [
+      ['Combustível', vehicle.fuel],
+      ['Câmbio', vehicle.gear],
+      vehicle.color ? ['Cor', vehicle.color] : null,
+      vehicle.doors ? ['Portas', vehicle.doors] : null,
+      ['Quilometragem', formatKm(vehicle.km)],
+      ['Categoria', vehicle.type]
+    ].filter(Boolean);
+    const features = vehicle.features || [];
+
+    return `
+      <div class="vehicle-page-inner container">
+        <a class="vehicle-page-back" href="./">← Voltar ao estoque</a>
+        <div class="vehicle-page-grid">
+          <div class="vehicle-page-gallery">
+            <div class="vehicle-page-main-media">
+              <img class="vehicle-page-main-image" id="vehiclePageMainImage" src="${escapeHtml(vehicle.images[0])}" alt="${escapeHtml(name)}" decoding="async">
+            </div>
+            <div class="vehicle-page-thumbs" role="group" aria-label="Fotos do veículo">${gallery}</div>
+          </div>
+          <article class="vehicle-page-details">
+            <span class="modal-badge${vehicle.sold ? ' badge-sold' : ''}">${escapeHtml(vehicle.sold ? 'Vendido' : vehicle.badge || 'Disponível agora')}</span>
+            <p class="eyebrow"><span aria-hidden="true"></span> ${escapeHtml(vehicle.type)}</p>
+            <h1>${escapeHtml(vehicle.brand)}<br><em>${escapeHtml(vehicle.model)}</em></h1>
+            <p class="vehicle-page-year">${escapeHtml(formatYear(vehicle.year))}</p>
+            <dl class="detail-list">${specs.map(([label, value]) => `<div><dt>${escapeHtml(label)}</dt><dd>${escapeHtml(value)}</dd></div>`).join('')}</dl>
+            ${features.length ? `<section class="vehicle-page-features"><h2>Itens do veículo</h2><ul>${features.map((item) => `<li>${escapeHtml(item)}</li>`).join('')}</ul></section>` : ''}
+            <div class="vehicle-page-price"><span>Preço à vista</span><strong>${formatPrice(vehicle.price)}</strong>${vehicle.priceTroca ? `<small>Na troca ${formatPrice(vehicle.priceTroca)}</small>` : ''}</div>
+            <a class="btn btn-whatsapp vehicle-page-cta" target="_blank" rel="noopener" data-cta="whatsapp-page" data-vehicle="${escapeHtml(vehicle.slug)}" href="${escapeHtml(whatsappLink(message))}"><span class="wa-icon" aria-hidden="true">✆</span> ${vehicle.sold ? 'Ver veículos parecidos' : 'Falar no WhatsApp'}</a>
+            <p class="modal-note">Atendimento 24 horas pelo WhatsApp</p>
+          </article>
+        </div>
+      </div>`;
+  }
+
+  function renderVehiclePage(vehicle) {
+    elements.catalogMain.hidden = true;
+    elements.vehiclePage.hidden = false;
+    elements.vehiclePage.innerHTML = vehiclePageHtml(vehicle);
+    document.title = `${vehicle.brand} ${vehicle.model} | Autobayer Veículos`;
+    const mainImage = $('#vehiclePageMainImage');
+    $$('.vehicle-page-thumb', elements.vehiclePage).forEach((thumb) => {
+      thumb.addEventListener('click', () => {
+        mainImage.src = thumb.dataset.pageThumb;
+        $$('.vehicle-page-thumb', elements.vehiclePage).forEach((item) =>
+          item.classList.toggle('active', item === thumb)
+        );
+      });
+    });
+    track('view_vehicle', { vehicle: vehicle.slug, price: vehicle.price });
+  }
+
+  function showCatalogPage() {
+    elements.catalogMain.hidden = false;
+    elements.vehiclePage.hidden = true;
+    elements.vehiclePage.innerHTML = '';
+    document.title = 'Autobayer Veículos | Seminovos em Pato Branco';
+  }
+
   function openModal(vehicle, options) {
     if (!vehicle) return;
     const skipHistory = options && options.skipHistory;
@@ -474,12 +548,13 @@
   function openFromUrl(options) {
     const slug = new URLSearchParams(location.search).get('veiculo');
     if (!slug) {
-      closeModal({ skipHistory: true });
+      showCatalogPage();
       return;
     }
     const vehicle = VEHICLES.find((v) => v.slug === slug);
     if (vehicle) {
-      openModal(vehicle, Object.assign({ skipHistory: true }, options));
+      closeModal({ skipHistory: true });
+      renderVehiclePage(vehicle);
       return;
     }
 
@@ -606,7 +681,13 @@
       const card = event.target.closest('.vehicle-card');
       if (card) {
         if (link) event.preventDefault();
-        openModal(VEHICLES.find((v) => v.id === Number(card.dataset.id)));
+        const vehicle = VEHICLES.find((v) => v.id === Number(card.dataset.id));
+        if (vehicle) {
+          pushUrl(`${location.pathname}?veiculo=${encodeURIComponent(vehicle.slug)}`, {
+            veiculo: vehicle.slug
+          });
+          openFromUrl();
+        }
       }
     });
 

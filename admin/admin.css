@@ -688,7 +688,7 @@ select option {
 }
 
 .foto-botao {
-  width: 26px;
+  min-width: 26px;
   height: 26px;
   border: 0;
   border-radius: 4px;
@@ -699,6 +699,13 @@ select option {
   cursor: pointer;
   display: grid;
   place-items: center;
+}
+
+.foto-botao-capa {
+  width: auto;
+  padding: 0 8px;
+  font-size: 11px;
+  font-weight: 700;
 }
 
 .foto-botao:hover {

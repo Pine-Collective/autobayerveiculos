@@ -54,7 +54,7 @@ test.describe('Painel do estoque', () => {
     await page.locator('#botaoEntrar').click();
     await expect(page.locator('#painel')).toBeVisible();
     await expect(page.locator('#telaLogin')).toBeHidden();
-    await expect(page.locator('#lista .item')).toHaveCount(6);
+    await expect(page.locator('#lista .item')).toHaveCount(5);
   });
 
   test('marcar vendido e publicar chega ao repositório', async ({ page, request }) => {
@@ -115,7 +115,7 @@ test.describe('Painel do estoque', () => {
 
     await page.locator('#formVeiculo button[type="submit"]').click();
     await expect(page.locator('#modalEditor')).toBeHidden();
-    await expect(page.locator('#lista .item')).toHaveCount(7);
+    await expect(page.locator('#lista .item')).toHaveCount(6);
 
     await page.locator('#botaoSalvar').click();
     await expect(page.locator('#faixaStatus')).toContainText('Publicado', { timeout: 15000 });

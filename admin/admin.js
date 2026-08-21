@@ -29,6 +29,7 @@
   }
   const { TIPOS, COMBUSTIVEIS, CAMBIOS, SELOS, gerarSlug, slugUnico } = SCHEMA;
   const TIPO_MOTO = 'Moto';
+  const FOTO_PLACEHOLDER = 'assets/veiculo-sem-foto.svg';
 
   const $ = (seletor) => document.querySelector(seletor);
 
@@ -518,11 +519,11 @@
         (src, indice) => `
         <div class="foto${indice === 0 ? ' capa' : ''}">
           <img src="${escapar(urlExibicao(src))}" alt="Foto ${indice + 1}">
-          ${indice === 0 ? '<span class="foto-capa-marca">Capa</span>' : ''}
+          ${indice === 0 ? '<span class="foto-capa-marca">Capa atual</span>' : ''}
           <div class="foto-botoes">
             ${
               indice > 0
-                ? `<button class="foto-botao" type="button" data-capa="${indice}" title="Tornar capa" aria-label="Tornar foto ${indice + 1} a capa">★</button>`
+                ? `<button class="foto-botao foto-botao-capa" type="button" data-capa="${indice}" title="Usar como capa" aria-label="Usar foto ${indice + 1} como capa">Definir capa</button>`
                 : ''
             }
             <button class="foto-botao" type="button" data-remover="${indice}" title="Remover" aria-label="Remover foto ${indice + 1}">×</button>
@@ -547,6 +548,10 @@
       renderizarGaleria();
     }
   });
+
+  function removerFotoPlaceholder() {
+    fotosEditor = fotosEditor.filter((foto) => foto !== FOTO_PLACEHOLDER);
+  }
 
   /* --- Compressão no navegador ---------------------------------------
    * Foto de celular tem 4–12 MB; aqui ela vira WebP de ~150 KB antes de
@@ -637,6 +642,7 @@
     for (let i = 0; i < arquivos.length; i++) {
       progresso.textContent = `Otimizando foto ${i + 1} de ${arquivos.length}...`;
       try {
+        removerFotoPlaceholder();
         fotosEditor.push(await comprimir(arquivos[i]));
         renderizarGaleria();
       } catch (erro) {
@@ -660,6 +666,7 @@
     const campo = $('#campoUrlFoto');
     const url = campo.value.trim();
     if (!url) return;
+    removerFotoPlaceholder();
     fotosEditor.push(url);
     campo.value = '';
     $('#colarLink').hidden = true;

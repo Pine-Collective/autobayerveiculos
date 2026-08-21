@@ -660,6 +660,7 @@ clicar(q('#botaoAdicionarUrl'));
 await tick();
 check('foto adicionada aparece na galeria', qq('#galeria .foto').length === 1);
 check('primeira foto é marcada como capa', qq('#galeria .foto')[0].classList.contains('capa'));
+check('galeria identifica a capa atual', /Capa atual/.test(q('#galeria').textContent));
 
 submeter(q('#formVeiculo'));
 await tick();

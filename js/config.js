@@ -11,22 +11,22 @@ window.AUTOBAYER_CONFIG = {
   nome: 'Autobayer Veículos',
 
   // Somente dígitos, com DDI + DDD. Usado para montar os links do WhatsApp.
-  whatsapp: '5511999990000',
+  whatsapp: '554699226135',
 
   // Formatado para exibição ao usuário.
-  telefoneExibicao: '(11) 99999-0000',
+  telefoneExibicao: 'WhatsApp (46) 9922-6135',
 
   // Usado em tel: (link clicável no celular).
-  telefoneLink: '+5511999990000',
+  telefoneLink: '+554699226135',
 
-  atendimento: 'Seg–Sex, 8h às 18h',
+  atendimento: 'Atendimento 24 horas',
 
   endereco: {
-    rua: 'Av. Exemplo, 1000',
+    rua: 'Rua Itabira, 290',
     bairro: 'Centro',
-    cidade: 'São Paulo',
-    estado: 'SP',
-    cep: '01000-000',
+    cidade: 'Pato Branco',
+    estado: 'PR',
+    cep: '85501-047',
     pais: 'BR'
   },
 

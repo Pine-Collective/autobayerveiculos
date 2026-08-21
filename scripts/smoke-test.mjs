@@ -343,24 +343,26 @@ $('#favToggle').dispatchEvent(new window.MouseEvent('click', { bubbles: true }))
 check('clicar no coração não abre o modal', !$('#modalBackdrop').classList.contains('open'));
 
 /* ------------------------------------------------------------------ */
-console.log('\n9. Modal, deep link e foco');
+console.log('\n9. Página individual, deep link e fotos');
 /* ------------------------------------------------------------------ */
 
 const targetCard = cards().find((c) => Number(c.dataset.id) === 2);
 const targetVehicle = VEHICLES.find((v) => v.id === 2);
 targetCard.dispatchEvent(new window.MouseEvent('click', { bubbles: true }));
 
-check('modal abre', $('#modalBackdrop').classList.contains('open'));
+check('página individual abre', !$('#vehiclePage').hidden);
 check(
   'URL recebe o deep link do veículo',
   window.location.search === `?veiculo=${targetVehicle.slug}`,
   window.location.search
 );
-check('foco vai para o botão de fechar', document.activeElement === $('#modalClose'));
-check('título do modal preenchido', $('#modalTitle').textContent.includes(targetVehicle.model));
-check('rolagem do body travada', document.body.style.overflow === 'hidden');
+check(
+  'título da página preenchido',
+  $('#vehiclePage h1').textContent.includes(targetVehicle.model)
+);
+check('catálogo fica separado da página individual', $('#catalogMain').hidden);
 
-const waHref = $('[data-cta="whatsapp-modal"]').getAttribute('href');
+const waHref = $('[data-cta="whatsapp-page"]').getAttribute('href');
 check(
   'CTA do WhatsApp cita o veículo e o preço',
   decodeURIComponent(waHref).includes(targetVehicle.model) &&
@@ -373,18 +375,17 @@ check(
     ),
   decodeURIComponent(waHref)
 );
-check('ficha técnica usa dl/dt/dd', $$('.detail-list dt').length === 6);
+check('ficha técnica usa dl/dt/dd', $$('#vehiclePage .detail-list dt').length === 5);
 
-const itensModal = $$('.modal-features li');
-check('modal lista os itens do veículo', itensModal.length > 0, `${itensModal.length}`);
-check('itens batem com os dados', itensModal.length === targetVehicle.features.length);
-check('modal mostra o preço na troca', $('.modal-price .price-troca') !== null);
+const itensPagina = $$('#vehiclePage .vehicle-page-features li');
+check('página lista os itens do veículo', itensPagina.length > 0, `${itensPagina.length}`);
+check('itens batem com os dados', itensPagina.length === targetVehicle.features.length);
+check('página mostra o preço na troca', $('#vehiclePage .vehicle-page-price small') !== null);
 
-// Esc fecha
-document.dispatchEvent(new window.KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
-check('Esc fecha o modal', !$('#modalBackdrop').classList.contains('open'));
+window.history.pushState({}, '', '/');
+window.dispatchEvent(new window.PopStateEvent('popstate'));
 check('URL volta ao normal', window.location.search === '', window.location.search);
-check('rolagem do body liberada', document.body.style.overflow === '');
+check('voltar mostra o catálogo', !$('#catalogMain').hidden && $('#vehiclePage').hidden);
 
 /* ------------------------------------------------------------------ */
 console.log('\n10. Acessibilidade e links reais nos cards');
@@ -405,8 +406,9 @@ check(
 );
 
 kbLink.dispatchEvent(new window.MouseEvent('click', { bubbles: true, cancelable: true }));
-check('clicar no link abre o modal sem navegar', $('#modalBackdrop').classList.contains('open'));
-$('#modalClose').dispatchEvent(new window.MouseEvent('click', { bubbles: true }));
+check('clicar no link abre a página individual', !$('#vehiclePage').hidden);
+window.history.pushState({}, '', '/');
+window.dispatchEvent(new window.PopStateEvent('popstate'));
 
 check(
   'todos os selects têm label associado',
@@ -494,7 +496,7 @@ check(
 );
 check(
   'links do WhatsApp montados a partir do config',
-  $$('[data-wa-link]').every((a) => a.href.startsWith('https://wa.me/5511999990000?text='))
+  $$('[data-wa-link]').every((a) => a.href.startsWith('https://wa.me/554699226135?text='))
 );
 check(
   'links externos usam rel=noopener',
@@ -527,13 +529,14 @@ check(
 soldCard.dispatchEvent(new window.MouseEvent('click', { bubbles: true }));
 check(
   'CTA do vendido oferece similares',
-  /Ver similares/.test($('[data-cta="whatsapp-modal"]').textContent)
+  /Ver veículos parecidos/.test($('[data-cta="whatsapp-page"]').textContent)
 );
 check(
   'mensagem do WhatsApp pede algo parecido',
-  /parecido/.test(decodeURIComponent($('[data-cta="whatsapp-modal"]').getAttribute('href')))
+  /parecido/.test(decodeURIComponent($('[data-cta="whatsapp-page"]').getAttribute('href')))
 );
-$('#modalClose').dispatchEvent(new window.MouseEvent('click', { bubbles: true }));
+window.history.pushState({}, '', '/');
+window.dispatchEvent(new window.PopStateEvent('popstate'));
 
 VEHICLES.find((v) => v.id === 5).sold = false;
 setSelect('#sortFilter', 'featured');
@@ -588,7 +591,7 @@ await tick(80);
 
 const qMorto = (sel) => domLinkMorto.window.document.querySelector(sel);
 check('aviso de link morto aparece', qMorto('#linkAviso') && !qMorto('#linkAviso').hidden);
-check('modal NÃO abre para slug inexistente', !qMorto('#modalBackdrop').classList.contains('open'));
+check('página individual NÃO abre para slug inexistente', qMorto('#vehiclePage').hidden);
 check(
   'catálogo continua renderizado por trás do aviso',
   domLinkMorto.window.document.querySelectorAll('.vehicle-card').length > 0
