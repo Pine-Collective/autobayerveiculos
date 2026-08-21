@@ -50,15 +50,13 @@ const schemaEstoque = {
       // schema.org tem tipo próprio para moto; usar "Car" para uma CG 125
       // seria dado errado para o Google.
       '@type': vehicle.type === 'Moto' ? 'Motorcycle' : 'Car',
-      name: `${vehicle.brand} ${vehicle.model} ${vehicle.year}`,
+      name: `${vehicle.brand} ${vehicle.model}${vehicle.year ? ` ${vehicle.year}` : ''}`,
       brand: { '@type': 'Brand', name: vehicle.brand },
       model: vehicle.model,
-      vehicleModelDate: String(vehicle.year),
       bodyType: vehicle.type,
       color: vehicle.color,
       fuelType: vehicle.fuel,
       vehicleTransmission: vehicle.gear,
-      mileageFromOdometer: { '@type': 'QuantitativeValue', value: vehicle.km, unitCode: 'KMT' },
       image: vehicle.images.map((img) =>
         /^(https?:)?\/\//.test(img) ? img : `${siteUrl}/${img.replace(/^\/+/, '')}`
       ),
@@ -71,6 +69,15 @@ const schemaEstoque = {
         seller: { '@type': 'AutoDealer', name: config.nome }
       }
     };
+
+    if (vehicle.year) item.vehicleModelDate = String(vehicle.year);
+    if (vehicle.km) {
+      item.mileageFromOdometer = {
+        '@type': 'QuantitativeValue',
+        value: vehicle.km,
+        unitCode: 'KMT'
+      };
+    }
 
     if (vehicle.doors) item.numberOfDoors = vehicle.doors;
     if (vehicle.features?.length) item.vehicleConfiguration = vehicle.features.join(', ');

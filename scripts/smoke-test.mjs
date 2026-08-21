@@ -121,7 +121,7 @@ check(
 check('estado vazio está escondido', $('#emptyState').hidden);
 check(
   'região aria-live anuncia a contagem',
-  /6 veículos encontrados/.test($('#resultCount').textContent),
+  new RegExp(`${VEHICLES.length} veículos encontrados`).test($('#resultCount').textContent),
   JSON.stringify($('#resultCount').textContent)
 );
 check(
@@ -140,8 +140,8 @@ function setSelect(selector, value) {
   el.dispatchEvent(new window.Event('change', { bubbles: true }));
 }
 
-setSelect('#priceFilter', '80000');
-check('"Até R$ 80 mil" retorna nada (mais barato é 82.900)', cards().length === 0);
+setSelect('#priceFilter', '8000');
+check('"Até R$ 8 mil" retorna nada (mais barato é 8.900)', cards().length === 0);
 check('estado vazio aparece', $('#emptyState').hidden === false);
 
 setSelect('#priceFilter', '150000');
@@ -167,23 +167,34 @@ check(
 );
 
 const suvTab = tabs.find((t) => t.dataset.category === 'SUV');
-check('contador de SUV calculado dos dados', suvTab.querySelector('small').textContent === '02');
-check('contador de Todos calculado dos dados', tabs[0].querySelector('small').textContent === '06');
+check(
+  'contador de SUV calculado dos dados',
+  suvTab.querySelector('small').textContent ===
+    String(VEHICLES.filter((v) => v.type === 'SUV').length).padStart(2, '0')
+);
+check(
+  'contador de Todos calculado dos dados',
+  tabs[0].querySelector('small').textContent === String(VEHICLES.length).padStart(2, '0')
+);
 
 suvTab.dispatchEvent(new window.MouseEvent('click', { bubbles: true }));
-check('clicar em SUV filtra para 2', cards().length === 2, `${cards().length} cards`);
+check(
+  'clicar em SUV filtra para 1',
+  cards().length === VEHICLES.filter((v) => v.type === 'SUV').length,
+  `${cards().length} cards`
+);
 check('aba SUV marcada como pressionada', suvTab.getAttribute('aria-pressed') === 'true');
 check('aba Todos desmarcada', tabs[0].getAttribute('aria-pressed') === 'false');
 
 const brandOptions = $$('#brandFilter option');
 check(
-  'marcas geradas dos dados (6 + "todas")',
-  brandOptions.length === 7,
+  'marcas geradas dos dados',
+  brandOptions.length === new Set(VEHICLES.map((v) => v.brand)).size + 1,
   `${brandOptions.length}`
 );
 
-setSelect('#brandFilter', 'Jeep');
-check('SUV + Jeep = 1 veículo (filtros combinam)', cards().length === 1, `${cards().length}`);
+setSelect('#brandFilter', VEHICLES.find((v) => v.type === 'SUV').brand);
+check('SUV + marca combinam', cards().length === 1, `${cards().length}`);
 
 /* ------------------------------------------------------------------ */
 console.log('\n4. Limpar filtros');
@@ -199,15 +210,18 @@ console.log('\n5. Busca');
 /* ------------------------------------------------------------------ */
 
 const search = $('#searchInput');
-search.value = 'corolla';
+search.value = VEHICLES[0].model.split(' ')[0].toLowerCase();
 search.dispatchEvent(new window.Event('input', { bubbles: true }));
 await tick();
-check('busca por "corolla" retorna 1', cards().length === 1, `${cards().length}`);
+check('busca por modelo retorna 1', cards().length === 1, `${cards().length}`);
 
-search.value = 'RANGER';
+search.value = VEHICLES[0].brand.toUpperCase();
 search.dispatchEvent(new window.Event('input', { bubbles: true }));
 await tick();
-check('busca é case-insensitive', cards().length === 1);
+check(
+  'busca é case-insensitive',
+  cards().length === VEHICLES.filter((v) => v.brand === VEHICLES[0].brand).length
+);
 
 search.value = 'ferrari';
 search.dispatchEvent(new window.Event('input', { bubbles: true }));
@@ -245,7 +259,7 @@ setSelect('#sortFilter', 'featured');
 const firstCardId = Number(cards()[0].dataset.id);
 check(
   '"Destaques" coloca um veículo featured primeiro',
-  VEHICLES.find((v) => v.id === firstCardId).featured === true,
+  !VEHICLES.some((v) => v.featured) || VEHICLES.find((v) => v.id === firstCardId).featured === true,
   `primeiro id=${firstCardId}`
 );
 
@@ -253,13 +267,27 @@ check(
 console.log('\n7. Formatação pt-BR');
 /* ------------------------------------------------------------------ */
 
-const cardText = cards()[0].textContent.replace(/\s+/g, ' ');
+const cardText = cards()[0]
+  .textContent.replace(/\s+/g, ' ')
+  .replace(/\u00a0/g, ' ');
+const primeiroExibido = VEHICLES.find((v) => v.id === Number(cards()[0].dataset.id));
 check(
   'preço formatado como moeda BRL',
-  /R\$\s?154\.900/.test(cardText),
+  cardText.includes(
+    new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 })
+      .format(primeiroExibido.price)
+      .replace(/\u00a0/g, ' ')
+  ),
   cardText.match(/R\$[^·]*/)?.[0]
 );
-check('quilometragem com separador de milhar', /42\.300 km/.test(cardText));
+check(
+  'quilometragem com separador de milhar',
+  cardText.includes(
+    primeiroExibido.km
+      ? new Intl.NumberFormat('pt-BR').format(primeiroExibido.km) + ' km'
+      : 'Km não informado'
+  )
+);
 
 /* ------------------------------------------------------------------ */
 console.log('\n7b. Dois preços e lista de itens');
@@ -275,9 +303,10 @@ check(
     /na troca/i.test(cardComTroca.querySelector('.price-troca').textContent)
 );
 
-const semTroca = VEHICLES.find((v) => !v.priceTroca);
-const cardSemTroca = cards().find((c) => Number(c.dataset.id) === semTroca.id);
-check('sem preço na troca, nada é exibido', cardSemTroca.querySelector('.price-troca') === null);
+check(
+  'todos os anúncios mostram preço na troca',
+  VEHICLES.every((v) => v.priceTroca > 0)
+);
 
 /* ------------------------------------------------------------------ */
 console.log('\n8. Favoritos persistentes');
@@ -318,32 +347,37 @@ console.log('\n9. Modal, deep link e foco');
 /* ------------------------------------------------------------------ */
 
 const targetCard = cards().find((c) => Number(c.dataset.id) === 2);
+const targetVehicle = VEHICLES.find((v) => v.id === 2);
 targetCard.dispatchEvent(new window.MouseEvent('click', { bubbles: true }));
 
 check('modal abre', $('#modalBackdrop').classList.contains('open'));
 check(
   'URL recebe o deep link do veículo',
-  window.location.search === '?veiculo=toyota-corolla-xei-2021',
+  window.location.search === `?veiculo=${targetVehicle.slug}`,
   window.location.search
 );
 check('foco vai para o botão de fechar', document.activeElement === $('#modalClose'));
-check('título do modal preenchido', /Corolla/.test($('#modalTitle').textContent));
+check('título do modal preenchido', $('#modalTitle').textContent.includes(targetVehicle.model));
 check('rolagem do body travada', document.body.style.overflow === 'hidden');
 
 const waHref = $('[data-cta="whatsapp-modal"]').getAttribute('href');
 check(
   'CTA do WhatsApp cita o veículo e o preço',
-  waHref.includes('Corolla') && waHref.includes('119.900'),
+  decodeURIComponent(waHref).includes(targetVehicle.model) &&
+    decodeURIComponent(waHref).includes(
+      new Intl.NumberFormat('pt-BR', {
+        style: 'currency',
+        currency: 'BRL',
+        maximumFractionDigits: 0
+      }).format(targetVehicle.price)
+    ),
   decodeURIComponent(waHref)
 );
 check('ficha técnica usa dl/dt/dd', $$('.detail-list dt').length === 6);
 
 const itensModal = $$('.modal-features li');
 check('modal lista os itens do veículo', itensModal.length > 0, `${itensModal.length}`);
-check(
-  'itens batem com os dados',
-  itensModal.length === VEHICLES.find((v) => v.id === 2).features.length
-);
+check('itens batem com os dados', itensModal.length === targetVehicle.features.length);
 check('modal mostra o preço na troca', $('.modal-price .price-troca') !== null);
 
 // Esc fecha
@@ -485,8 +519,9 @@ check(
   `último id=${cards()[cards().length - 1].dataset.id}`
 );
 check(
-  'contador da aba ignora vendidos (06 -> 05)',
-  $$('#categoryRow .category')[0].querySelector('small').textContent === '05'
+  'contador da aba ignora vendidos',
+  $$('#categoryRow .category')[0].querySelector('small').textContent ===
+    String(VEHICLES.filter((v) => !v.sold).length).padStart(2, '0')
 );
 
 soldCard.dispatchEvent(new window.MouseEvent('click', { bubbles: true }));

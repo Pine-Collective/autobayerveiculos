@@ -25,7 +25,8 @@
   const numberFormatter = new Intl.NumberFormat('pt-BR');
 
   const formatPrice = (value) => brlFormatter.format(value);
-  const formatKm = (value) => `${numberFormatter.format(value)} km`;
+  const formatKm = (value) => (value ? `${numberFormatter.format(value)} km` : 'Km não informado');
+  const formatYear = (value) => (value ? String(value) : 'Ano não informado');
 
   const HTML_ESCAPES = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' };
 
@@ -209,7 +210,7 @@
       <article class="vehicle-card${vehicle.sold ? ' is-sold' : ''}" data-id="${vehicle.id}">
         <div class="vehicle-image">
           <img src="${escapeHtml(vehicle.images[0])}"
-               alt="${escapeHtml(name)} ${vehicle.year}"
+               alt="${escapeHtml(name)} ${escapeHtml(formatYear(vehicle.year))}"
                width="900" height="600" loading="lazy" decoding="async">
           ${badge ? `<span class="badge${vehicle.sold ? ' badge-sold' : ''}">${escapeHtml(badge)}</span>` : ''}
           <button type="button" class="heart${isFavorite ? ' saved' : ''}"
@@ -226,7 +227,7 @@
                 ${escapeHtml(name)}
               </a>
             </h3>
-            <span class="vehicle-year">${vehicle.year}</span>
+            <span class="vehicle-year">${escapeHtml(formatYear(vehicle.year))}</span>
           </div>
           <p class="vehicle-sub">${escapeHtml(vehicle.type)} · ${formatKm(vehicle.km)} · ${escapeHtml(vehicle.gear)}</p>
           <div class="vehicle-meta">
@@ -328,8 +329,8 @@
   function modalHtml(vehicle) {
     const name = `${vehicle.brand} ${vehicle.model}`;
     const message = vehicle.sold
-      ? `Olá! Vi que o ${name} ${vehicle.year} foi vendido. Vocês têm algo parecido?`
-      : `Olá! Tenho interesse no ${name} ${vehicle.year}, anunciado por ${formatPrice(vehicle.price)}.`;
+      ? `Olá! Vi que o ${name}${vehicle.year ? ` ${vehicle.year}` : ''} foi vendido. Vocês têm algo parecido?`
+      : `Olá! Tenho interesse no ${name}${vehicle.year ? ` ${vehicle.year}` : ''}, anunciado por ${formatPrice(vehicle.price)}.`;
 
     const gallery =
       vehicle.images.length > 1
@@ -369,7 +370,7 @@
       <div class="modal-layout">
         <div class="modal-media">
           <img id="modalMainImage" src="${escapeHtml(vehicle.images[0])}"
-               alt="${escapeHtml(name)} ${vehicle.year}" width="900" height="600" decoding="async">
+               alt="${escapeHtml(name)} ${escapeHtml(formatYear(vehicle.year))}" width="900" height="600" decoding="async">
           ${gallery}
         </div>
         <div class="modal-details">
@@ -377,7 +378,7 @@
             ${escapeHtml(vehicle.sold ? 'Vendido' : vehicle.badge || 'Disponível agora')}
           </span>
           <h2 id="modalTitle">${escapeHtml(vehicle.brand)}<br><em>${escapeHtml(vehicle.model)}</em></h2>
-          <p class="vehicle-sub">${escapeHtml(vehicle.type)} · ${vehicle.year} · ${formatKm(vehicle.km)}</p>
+          <p class="vehicle-sub">${escapeHtml(vehicle.type)} · ${escapeHtml(formatYear(vehicle.year))} · ${formatKm(vehicle.km)}</p>
 
           <dl class="detail-list">
             ${specs

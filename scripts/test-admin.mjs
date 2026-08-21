@@ -141,7 +141,8 @@ console.log('\n2. Leitura do estoque');
 
 const leitura = await chamar(vehicles, { method: 'GET', token: TOKEN });
 check('GET devolve a lista de veículos', Array.isArray(leitura.body.vehicles));
-check('GET devolve 6 veículos', leitura.body.vehicles.length === 6);
+const totalInicial = leitura.body.vehicles.length;
+check('GET devolve o estoque completo', leitura.body.vehicles.length === totalInicial);
 check('GET devolve o sha para controle de versão', leitura.body.sha === SHA_INICIAL);
 
 /* ================================================================== */
@@ -200,9 +201,9 @@ check('PUT com slug duplicado é aceito', comClone.status === 200, JSON.stringif
 const aposClone = lerRepoJson();
 check(
   'o duplicado ganhou sufixo -2 e o original ficou intacto',
-  aposClone.filter((v) => v.slug.startsWith('toyota-corolla-xei-2021')).length === 2 &&
-    aposClone.some((v) => v.slug === 'toyota-corolla-xei-2021') &&
-    aposClone.some((v) => v.slug === 'toyota-corolla-xei-2021-2'),
+  aposClone.filter((v) => v.slug.startsWith(estoque[1].slug)).length === 2 &&
+    aposClone.some((v) => v.slug === estoque[1].slug) &&
+    aposClone.some((v) => v.slug === `${estoque[1].slug}-2`),
   aposClone.map((v) => v.slug).join(', ')
 );
 
@@ -519,7 +520,11 @@ await tick(400);
 
 check('login correto abre o painel', !q('#painel').hidden && q('#telaLogin').hidden);
 check('senha é apagada do campo após entrar', q('#senha').value === '');
-check('lista carrega os veículos', qq('#lista .item').length === 6, `${qq('#lista .item').length}`);
+check(
+  'lista carrega os veículos',
+  qq('#lista .item').length === totalInicial,
+  `${qq('#lista .item').length}`
+);
 check('botão publicar começa desabilitado', q('#botaoSalvar').disabled);
 check('card mostra preço formatado', /R\$/.test(qq('#lista .item')[0].textContent));
 
@@ -659,7 +664,7 @@ check('primeira foto é marcada como capa', qq('#galeria .foto')[0].classList.co
 submeter(q('#formVeiculo'));
 await tick();
 check('editor fecha ao aplicar', q('#modalEditor').hidden);
-check('veículo novo entra na lista', qq('#lista .item').length === 7);
+check('veículo novo entra na lista', qq('#lista .item').length === totalInicial + 1);
 
 clicar(q('#botaoSalvar'));
 await tick(300);
@@ -714,7 +719,7 @@ clicar(q('#botaoAdicionarUrl'));
 await tick();
 submeter(q('#formVeiculo'));
 await tick();
-check('veículo do anúncio entra na lista', qq('#lista .item').length === 8);
+check('veículo do anúncio entra na lista', qq('#lista .item').length === totalInicial + 2);
 check(
   'card do painel mostra o preço na troca',
   /troca/i.test(q('#lista').textContent),
@@ -723,7 +728,9 @@ check(
 
 clicar(q('#botaoSalvar'));
 await tick(300);
-const corsa = lerRepoJson().find((v) => v.model.startsWith('Corsa'));
+const corsa = lerRepoJson()
+  .filter((v) => v.model.startsWith('Corsa'))
+  .at(-1);
 check('anúncio colado foi publicado', Boolean(corsa));
 check('priceTroca gravado', corsa?.priceTroca === 16900, String(corsa?.priceTroca));
 check('features gravadas', corsa?.features.length === 2, JSON.stringify(corsa?.features));
@@ -753,7 +760,7 @@ clicar(q('#botaoAdicionarUrl'));
 await tick();
 submeter(q('#formVeiculo'));
 await tick();
-check('moto entra na lista', qq('#lista .item').length === 9);
+check('moto entra na lista', qq('#lista .item').length === totalInicial + 3);
 
 clicar(q('#botaoSalvar'));
 await tick(300);

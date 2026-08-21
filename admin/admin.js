@@ -688,7 +688,9 @@
     const problemas = [];
     if (!brand) problemas.push('Informe a marca.');
     if (!model) problemas.push('Informe o modelo.');
-    if (!year || year < 1950) problemas.push('Informe um ano válido.');
+    if (year < 0 || year > new Date().getFullYear() + 2) {
+      problemas.push('Informe um ano válido.');
+    }
 
     const precoAvista = Number(soDigitos($('#f-price').value));
     const precoTroca = Number(soDigitos($('#f-priceTroca').value));

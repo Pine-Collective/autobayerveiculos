@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 600" role="img" aria-labelledby="title desc">
+  <title id="title">Foto do veículo em breve</title>
+  <desc id="desc">Imagem provisória enquanto as fotos do veículo não são cadastradas.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#25282e"/>
+      <stop offset="1" stop-color="#0b0c0f"/>
+    </linearGradient>
+  </defs>
+  <rect width="900" height="600" fill="url(#bg)"/>
+  <path d="M265 365h370l-30-70c-8-18-24-29-44-29H339c-20 0-36 11-44 29l-30 70z" fill="none" stroke="#d21f2b" stroke-width="10"/>
+  <circle cx="330" cy="380" r="30" fill="#d21f2b"/>
+  <circle cx="570" cy="380" r="30" fill="#d21f2b"/>
+  <text x="450" y="470" fill="#f2f2f2" font-family="Arial, sans-serif" font-size="30" text-anchor="middle">Fotos em breve</text>
+  <text x="450" y="510" fill="#a9abb0" font-family="Arial, sans-serif" font-size="18" text-anchor="middle">Autobayer Veículos</text>
+</svg>
