@@ -6,7 +6,7 @@
     <title>Autobayer Veículos | Seminovos em Pato Branco</title>
     <meta
       name="description"
-      content="Catálogo de seminovos da Autobayer Veículos: SUVs, sedãs, hatches e picapes revisados, com procedência garantida e financiamento facilitado. Fale conosco pelo WhatsApp."
+      content="Autobayer Veículos, em Pato Branco: seminovos revisados, com procedência garantida e financiamento facilitado. Veja os destaques do estoque e fale conosco pelo WhatsApp."
     />
     <meta name="theme-color" content="#090a0c" />
 
@@ -81,13 +81,10 @@
         ]
       }
     </script>
-    <!-- __SCHEMA_ESTOQUE__ : o build injeta aqui o JSON-LD com os veículos,
-         gerado de data/vehicles.json — assim o Google vê o estoque sem
-         depender de JavaScript. -->
   </head>
 
   <body>
-    <a class="skip-link" href="#estoque">Pular para o estoque</a>
+    <a class="skip-link" href="#destaques">Pular para os destaques</a>
 
     <div class="topbar">
       <div class="container topbar-inner">
@@ -120,7 +117,7 @@
 
         <nav class="main-nav" id="mainNav" aria-label="Navegação principal">
           <a href="#inicio">Início</a>
-          <a href="#estoque">Estoque</a>
+          <a href="veiculos.html">Veículos</a>
           <a href="#sobre">A Autobayer</a>
           <a href="#contato">Contato</a>
           <!-- Só aparece no painel mobile: no desktop o telefone já está no
@@ -164,7 +161,7 @@
               Veículos selecionados, revisados e prontos para você. Encontre o carro ideal para cada
               momento da sua vida.
             </p>
-            <a href="#estoque" class="btn btn-primary">
+            <a href="veiculos.html" class="btn btn-primary">
               Ver veículos disponíveis <b aria-hidden="true">↗</b>
             </a>
           </div>
@@ -192,66 +189,23 @@
         </div>
       </section>
 
-      <section class="catalog-section" id="estoque">
+      <!-- A home mostra só uma amostra do estoque: no celular a lista
+           inteira virava uma rolagem sem fim. A busca completa, com filtros,
+           mora em veiculos.html. -->
+      <section class="showcase-section" id="destaques">
         <div class="container">
           <div class="section-heading">
             <div>
               <p class="eyebrow"><span aria-hidden="true"></span> ESTOQUE AUTOBAYER</p>
-              <h2>Encontre o veículo <em>que combina com você.</em></h2>
+              <h2>Destaques <em>do estoque.</em></h2>
             </div>
-            <button class="text-link" id="clearFilters" type="button">
-              Limpar filtros <span aria-hidden="true">↻</span>
-            </button>
+            <a class="text-link" href="veiculos.html">
+              Ver todos os veículos <span aria-hidden="true">→</span>
+            </a>
           </div>
 
-          <div class="catalog-toolbar">
-            <div class="search-box">
-              <span class="search-icon" aria-hidden="true">⌕</span>
-              <label class="visually-hidden" for="searchInput">Buscar veículo</label>
-              <input id="searchInput" type="search" placeholder="Busque por marca, modelo..." />
-            </div>
-
-            <div class="filters">
-              <label class="visually-hidden" for="brandFilter">Filtrar por marca</label>
-              <select id="brandFilter">
-                <option value="all">Todas as marcas</option>
-                <!-- demais marcas são geradas a partir de js/vehicles.js -->
-              </select>
-
-              <label class="visually-hidden" for="priceFilter">Filtrar por preço</label>
-              <select id="priceFilter">
-                <option value="all">Qualquer preço</option>
-                <option value="8000">Até R$ 8 mil</option>
-                <option value="150000">Até R$ 150 mil</option>
-                <option value="250000">Até R$ 250 mil</option>
-              </select>
-
-              <label class="visually-hidden" for="sortFilter">Ordenar por</label>
-              <select id="sortFilter">
-                <option value="featured">Destaques</option>
-                <option value="lower">Menor preço</option>
-                <option value="higher">Maior preço</option>
-              </select>
-            </div>
-          </div>
-
-          <div class="category-wrap">
-            <!-- Abas geradas a partir do estoque, com contagem automática. -->
-            <div
-              class="category-row"
-              id="categoryRow"
-              role="group"
-              aria-label="Filtrar por tipo"
-            ></div>
-            <button class="fav-toggle" id="favToggle" type="button" aria-pressed="false" hidden>
-              <span aria-hidden="true">♥</span> Favoritos <span id="favCount"></span>
-            </button>
-          </div>
-
-          <p class="visually-hidden" id="resultCount" role="status" aria-live="polite"></p>
-
-          <!-- Mostrado quando um link compartilhado aponta para um veículo
-               que saiu do estoque — antes o site ficava em silêncio. -->
+          <!-- Mostrado quando um link antigo aponta para um veículo que saiu
+               do estoque — antes o site ficava em silêncio. -->
           <p class="link-aviso" id="linkAviso" role="status" hidden>
             O veículo desse link já saiu do estoque. Veja abaixo os disponíveis — ou
             <a
@@ -265,11 +219,19 @@
             que buscamos um parecido.
           </p>
 
-          <div class="vehicle-grid" id="vehicleGrid"></div>
+          <!-- data-limit liga o "modo vitrine" no js/app.js: sem filtros,
+               só os primeiros destaques disponíveis. -->
+          <div class="vehicle-grid" id="vehicleGrid" data-limit="6"></div>
 
           <p class="empty-state" id="emptyState" hidden>
-            Nenhum veículo encontrado. Tente ajustar os filtros.
+            Nenhum veículo disponível no momento. Fale conosco pelo WhatsApp.
           </p>
+
+          <div class="showcase-cta">
+            <a class="btn btn-primary" href="veiculos.html">
+              Ver estoque completo <b aria-hidden="true">↗</b>
+            </a>
+          </div>
 
           <noscript>
             <p class="empty-state">
@@ -365,6 +327,27 @@
         <div id="modalContent"></div>
       </div>
     </div>
+
+    <!-- Atalho fixo para o WhatsApp: boa parte dos clientes prefere fechar
+         negócio por lá em vez de navegar pelo site. O href real é montado
+         pelo app.js a partir de js/config.js; o daqui é o fallback sem JS. -->
+    <a
+      class="whatsapp-float"
+      data-wa-link
+      data-cta="whatsapp-flutuante"
+      href="https://wa.me/554699226135"
+      target="_blank"
+      rel="noopener"
+      aria-label="Falar com a Autobayer no WhatsApp"
+    >
+      <svg class="whatsapp-float-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+        <path
+          fill="currentColor"
+          d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51a12.8 12.8 0 0 0-.57-.01c-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893A11.821 11.821 0 0 0 20.465 3.488"
+        />
+      </svg>
+      <span class="whatsapp-float-label">Fale conosco</span>
+    </a>
 
     <!-- defer nos três: não bloqueiam o parse e a ordem é preservada. -->
     <script src="js/config.js" defer></script>

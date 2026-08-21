@@ -4,6 +4,18 @@ Site institucional e catálogo de estoque. Site estático — HTML, CSS e JavaSc
 puro, sem framework. O build só gera assets derivados (sitemap, imagens) e copia
 os arquivos para `public/`; não há bundler nem transpilação.
 
+São duas páginas públicas, e as duas rodam o mesmo `js/app.js`:
+
+| Página          | O que mostra                                                         |
+| --------------- | -------------------------------------------------------------------- |
+| `index.html`    | home: hero, **vitrine** com até 6 destaques, confiança e contato     |
+| `veiculos.html` | estoque completo com busca, filtros, abas de tipo e a ficha do carro |
+
+O que decide o modo é o próprio HTML: o grid da home tem `data-limit="6"`, e é
+esse atributo que liga a vitrine (sem filtros, sem vendidos, cortada no limite).
+A ficha de cada veículo é `veiculos.html?veiculo=<slug>` — a URL que vai no
+sitemap, no JSON-LD e na canonical enquanto a ficha está aberta.
+
 ## Rodando localmente
 
 ```bash
@@ -17,11 +29,12 @@ carregados por `<script>`, não por `fetch`, justamente para não depender de se
 ## Estrutura
 
 ```
-index.html              única página do site (com placeholders que o build resolve)
+index.html              home: hero + vitrine de destaques (placeholders do build)
+veiculos.html           estoque completo: busca, filtros e ficha do veículo
 data/vehicles.json      o estoque — fonte da verdade
 css/styles.css          estilos (seções numeradas no topo do arquivo)
 js/config.js            telefone, WhatsApp, endereço, DOMÍNIO, ID do GA4
-js/app.js               catálogo, filtros, modal, favoritos
+js/app.js               vitrine, catálogo, filtros, ficha do veículo, favoritos
 js/vehicles.js          GERADO a partir do JSON — fora do Git
 admin/                  painel do estoque (ver ADMIN.md)
 admin/schema.js         GERADO de lib/vehicle-schema.mjs — fora do Git
@@ -48,7 +61,12 @@ npm run test:e2e    # build + Chromium de verdade contra o public/
 
 O build também injeta no `public/` o **domínio** (de `js/config.js`, campo
 `siteUrl`) em canonical/Open Graph/robots/sitemap, e o **JSON-LD do estoque**
-no HTML. Quando o domínio próprio for registrado, troque só o `siteUrl`.
+em `veiculos.html` — a página que de fato lista os veículos. Quando o domínio
+próprio for registrado, troque só o `siteUrl`.
+
+O topo, o rodapé e o botão flutuante do WhatsApp são repetidos nos dois HTML
+(o site não tem motor de templates). O smoke test compara os três blocos entre
+os arquivos e falha se alguém mudar o telefone só num deles.
 
 `public/` é o diretório de saída padrão do Vercel (pinado em `vercel.json`).
 Ficam de fora do que é publicado: `node_modules`, `scripts/`, `package.json`
@@ -77,9 +95,15 @@ parecido. Depois pode remover.
 
 ### Trocar telefone, endereço ou domínio
 
-Edite **`js/config.js`**. O número aparece também em `index.html` como texto de
-fallback para quem abre o site sem JavaScript (procure por `fallback sem JS`) —
-atualize os dois.
+Edite **`js/config.js`**. O número aparece também em `index.html` e
+`veiculos.html` como texto de fallback para quem abre o site sem JavaScript
+(procure por `fallback sem JS`) — atualize os três.
+
+### Mudar quantos carros a home mostra
+
+O `data-limit` do grid em `index.html`. Não há mais nada a mexer: a ordem é a
+mesma de "Destaques" (marcados primeiro, depois com selo, depois os mais novos)
+e os vendidos ficam de fora.
 
 ### Trocar o logo
 

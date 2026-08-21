@@ -8,6 +8,7 @@
  *                          Fonte única: registrou o domínio, muda uma linha.
  *   __SCHEMA_ESTOQUE__  -> JSON-LD com os veículos de data/vehicles.json,
  *                          para o Google ver o estoque sem executar JS.
+ *                          Vai em veiculos.html, que é quem lista o estoque.
  *
  * "public" é o diretório de saída padrão do Vercel, Netlify e Cloudflare
  * Pages, então nenhuma configuração extra é necessária no painel.
@@ -21,7 +22,16 @@ import { carregarConfig, raizDoProjeto as root } from './lib/load-config.mjs';
 const outDir = join(root, 'public');
 
 /** Tudo que compõe o site publicado. */
-const ENTRIES = ['index.html', 'robots.txt', 'sitemap.xml', 'css', 'js', 'assets', 'admin'];
+const ENTRIES = [
+  'index.html',
+  'veiculos.html',
+  'robots.txt',
+  'sitemap.xml',
+  'css',
+  'js',
+  'assets',
+  'admin'
+];
 
 const config = carregarConfig();
 const siteUrl = config.siteUrl.replace(/\/$/, '');
@@ -60,7 +70,7 @@ const schemaEstoque = {
       image: vehicle.images.map((img) =>
         /^(https?:)?\/\//.test(img) ? img : `${siteUrl}/${img.replace(/^\/+/, '')}`
       ),
-      url: `${siteUrl}/?veiculo=${encodeURIComponent(vehicle.slug)}`,
+      url: `${siteUrl}/veiculos.html?veiculo=${encodeURIComponent(vehicle.slug)}`,
       offers: {
         '@type': 'Offer',
         price: vehicle.price, // sempre o à vista
@@ -97,7 +107,10 @@ async function processar(caminho, transformar) {
   await writeFile(arquivo, transformar(await readFile(arquivo, 'utf8')), 'utf8');
 }
 
-await processar('index.html', (html) =>
+await processar('index.html', (html) => html.replaceAll('__SITE_URL__', siteUrl));
+
+// O JSON-LD do estoque vai só na página que lista os veículos.
+await processar('veiculos.html', (html) =>
   html
     .replaceAll('__SITE_URL__', siteUrl)
     .replace(/<!-- __SCHEMA_ESTOQUE__[\s\S]*?-->/, blocoSchema)

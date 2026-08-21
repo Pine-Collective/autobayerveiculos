@@ -1,0 +1,268 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Veículos à venda | Autobayer Veículos</title>
+    <meta
+      name="description"
+      content="Estoque completo da Autobayer Veículos em Pato Branco: busque por marca, modelo, preço e tipo. SUVs, sedãs, hatches, picapes e motos revisados, com procedência garantida."
+    />
+    <meta name="theme-color" content="#090a0c" />
+
+    <!-- __SITE_URL__ é trocado pelo siteUrl de js/config.js no build
+         (scripts/build-site.mjs). Para mudar o domínio, edite só o config.
+         Esta também é a URL canônica das fichas: ?veiculo=slug daqui. -->
+    <link rel="canonical" href="__SITE_URL__/veiculos.html" />
+
+    <meta property="og:type" content="website" />
+    <meta property="og:locale" content="pt_BR" />
+    <meta property="og:site_name" content="Autobayer Veículos" />
+    <meta property="og:title" content="Veículos à venda | Autobayer Veículos" />
+    <meta
+      property="og:description"
+      content="Estoque completo da Autobayer: busque por marca, modelo, preço e tipo. Seminovos revisados, com procedência garantida."
+    />
+    <meta property="og:url" content="__SITE_URL__/veiculos.html" />
+    <meta property="og:image" content="__SITE_URL__/assets/og-autobayer.jpg" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="Autobayer Veículos — catálogo de seminovos" />
+    <meta name="twitter:card" content="summary_large_image" />
+
+    <link rel="icon" href="assets/favicon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" sizes="180x180" href="assets/apple-touch-icon.png" />
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=DM+Sans:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="css/styles.css" />
+
+    <!-- __SCHEMA_ESTOQUE__ : o build injeta aqui o JSON-LD com os veículos,
+         gerado de data/vehicles.json — assim o Google vê o estoque sem
+         depender de JavaScript. Ele mora nesta página porque é aqui que
+         os veículos estão de fato listados. -->
+  </head>
+
+  <body>
+    <a class="skip-link" href="#estoque">Pular para o estoque</a>
+
+    <div class="topbar">
+      <div class="container topbar-inner">
+        <span>Compra, venda e troca com confiança</span>
+        <span class="topbar-right">
+          Atendimento: 24 horas
+          <i aria-hidden="true"></i>
+          <!-- fallback sem JS: o número real vive em js/config.js -->
+          <a data-phone-link href="tel:+554699226135"
+            ><span data-phone-text>WhatsApp (46) 9922-6135</span></a
+          >
+        </span>
+      </div>
+    </div>
+
+    <header class="site-header">
+      <div class="container nav-wrap">
+        <a class="brand" href="index.html" aria-label="Autobayer Veículos — início">
+          <picture>
+            <source srcset="assets/logo-autobayer.webp" type="image/webp" />
+            <img
+              src="assets/logo-autobayer.png"
+              alt="Autobayer Veículos"
+              width="430"
+              height="160"
+              fetchpriority="high"
+            />
+          </picture>
+        </a>
+
+        <nav class="main-nav" id="mainNav" aria-label="Navegação principal">
+          <a href="index.html">Início</a>
+          <a class="active" href="veiculos.html" aria-current="page">Veículos</a>
+          <a href="index.html#sobre">A Autobayer</a>
+          <a href="index.html#contato">Contato</a>
+          <!-- Só aparece no painel mobile: no desktop o telefone já está no
+               topo, mas no celular o topbar some e o número ficava invisível. -->
+          <a class="nav-phone" data-phone-link href="tel:+554699226135">
+            <span aria-hidden="true">✆</span> <span data-phone-text>WhatsApp (46) 9922-6135</span>
+          </a>
+        </nav>
+
+        <a
+          class="header-whatsapp"
+          data-wa-link
+          data-cta="whatsapp-header"
+          href="https://wa.me/554699226135"
+          target="_blank"
+          rel="noopener"
+        >
+          <span class="wa-icon" aria-hidden="true">✆</span> Fale conosco
+        </a>
+
+        <button
+          class="menu-toggle"
+          id="menuToggle"
+          type="button"
+          aria-label="Abrir menu"
+          aria-expanded="false"
+          aria-controls="mainNav"
+        >
+          <span aria-hidden="true">☰</span>
+        </button>
+      </div>
+    </header>
+
+    <main id="catalogMain">
+      <section class="catalog-section" id="estoque">
+        <div class="container">
+          <div class="section-heading">
+            <div>
+              <p class="eyebrow"><span aria-hidden="true"></span> ESTOQUE AUTOBAYER</p>
+              <h2>Encontre o veículo <em>que combina com você.</em></h2>
+            </div>
+            <button class="text-link" id="clearFilters" type="button">
+              Limpar filtros <span aria-hidden="true">↻</span>
+            </button>
+          </div>
+
+          <div class="catalog-toolbar">
+            <div class="search-box">
+              <span class="search-icon" aria-hidden="true">⌕</span>
+              <label class="visually-hidden" for="searchInput">Buscar veículo</label>
+              <input id="searchInput" type="search" placeholder="Busque por marca, modelo..." />
+            </div>
+
+            <!-- No celular os selects ocupavam meia tela antes de qualquer carro
+                 aparecer; agora ficam atrás deste botão, que mostra quantos
+                 filtros estão ativos. No desktop ele some e os selects
+                 aparecem sempre (ver seção 11 do styles.css). -->
+            <button
+              class="filters-toggle"
+              id="filtersToggle"
+              type="button"
+              aria-expanded="false"
+              aria-controls="filters"
+            >
+              <span aria-hidden="true">≡</span> Filtros
+              <span class="filters-count" id="filtersCount" hidden></span>
+            </button>
+
+            <div class="filters" id="filters">
+              <label class="visually-hidden" for="brandFilter">Filtrar por marca</label>
+              <select id="brandFilter">
+                <option value="all">Todas as marcas</option>
+                <!-- demais marcas são geradas a partir de js/vehicles.js -->
+              </select>
+
+              <label class="visually-hidden" for="priceFilter">Filtrar por preço</label>
+              <select id="priceFilter">
+                <option value="all">Qualquer preço</option>
+                <option value="8000">Até R$ 8 mil</option>
+                <option value="150000">Até R$ 150 mil</option>
+                <option value="250000">Até R$ 250 mil</option>
+              </select>
+
+              <label class="visually-hidden" for="sortFilter">Ordenar por</label>
+              <select id="sortFilter">
+                <option value="featured">Destaques</option>
+                <option value="lower">Menor preço</option>
+                <option value="higher">Maior preço</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="category-wrap">
+            <!-- Abas geradas a partir do estoque, com contagem automática. -->
+            <div
+              class="category-row"
+              id="categoryRow"
+              role="group"
+              aria-label="Filtrar por tipo"
+            ></div>
+            <button class="fav-toggle" id="favToggle" type="button" aria-pressed="false" hidden>
+              <span aria-hidden="true">♥</span> Favoritos <span id="favCount"></span>
+            </button>
+          </div>
+
+          <p class="visually-hidden" id="resultCount" role="status" aria-live="polite"></p>
+
+          <!-- Mostrado quando um link compartilhado aponta para um veículo
+               que saiu do estoque — antes o site ficava em silêncio. -->
+          <p class="link-aviso" id="linkAviso" role="status" hidden>
+            O veículo desse link já saiu do estoque. Veja abaixo os disponíveis — ou
+            <a
+              data-wa-link
+              data-cta="whatsapp-link-morto"
+              href="https://wa.me/554699226135"
+              target="_blank"
+              rel="noopener"
+              >chame no WhatsApp</a
+            >
+            que buscamos um parecido.
+          </p>
+
+          <div class="vehicle-grid" id="vehicleGrid"></div>
+
+          <p class="empty-state" id="emptyState" hidden>
+            Nenhum veículo encontrado. Tente ajustar os filtros.
+          </p>
+
+          <noscript>
+            <p class="empty-state">
+              Ative o JavaScript para ver o estoque, ou fale direto conosco pelo WhatsApp
+              <a href="https://wa.me/554699226135">WhatsApp (46) 9922-6135</a>.
+            </p>
+          </noscript>
+        </div>
+      </section>
+    </main>
+
+    <main id="vehiclePage" class="vehicle-page" hidden></main>
+
+    <footer>
+      <div class="container footer-inner">
+        <picture>
+          <source srcset="assets/logo-autobayer.webp" type="image/webp" />
+          <img
+            src="assets/logo-autobayer.png"
+            alt="Autobayer Veículos"
+            width="430"
+            height="160"
+            loading="lazy"
+          />
+        </picture>
+        <span>© <span data-year>2026</span> Autobayer Veículos. Todos os direitos reservados.</span>
+        <span>Pato Branco, PR</span>
+      </div>
+    </footer>
+
+    <!-- Atalho fixo para o WhatsApp: boa parte dos clientes prefere fechar
+         negócio por lá em vez de navegar pelo site. O href real é montado
+         pelo app.js a partir de js/config.js; o daqui é o fallback sem JS. -->
+    <a
+      class="whatsapp-float"
+      data-wa-link
+      data-cta="whatsapp-flutuante"
+      href="https://wa.me/554699226135"
+      target="_blank"
+      rel="noopener"
+      aria-label="Falar com a Autobayer no WhatsApp"
+    >
+      <svg class="whatsapp-float-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+        <path
+          fill="currentColor"
+          d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51a12.8 12.8 0 0 0-.57-.01c-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893A11.821 11.821 0 0 0 20.465 3.488"
+        />
+      </svg>
+      <span class="whatsapp-float-label">Fale conosco</span>
+    </a>
+
+    <!-- defer nos três: não bloqueiam o parse e a ordem é preservada. -->
+    <script src="js/config.js" defer></script>
+    <script src="js/vehicles.js" defer></script>
+    <script src="js/app.js" defer></script>
+  </body>
+</html>

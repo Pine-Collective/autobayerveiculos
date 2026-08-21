@@ -33,10 +33,13 @@ try {
 
 const urls = [
   { loc: `${baseUrl}/`, priority: '1.0', changefreq: 'daily' },
+  { loc: `${baseUrl}/veiculos.html`, priority: '0.9', changefreq: 'daily' },
+  // A ficha de cada veículo mora na página de estoque — é a URL canônica
+  // que o app.js publica quando a ficha está aberta.
   ...vehicles
     .filter((vehicle) => !vehicle.sold)
     .map((vehicle) => ({
-      loc: `${baseUrl}/?veiculo=${encodeURIComponent(vehicle.slug)}`,
+      loc: `${baseUrl}/veiculos.html?veiculo=${encodeURIComponent(vehicle.slug)}`,
       priority: '0.8',
       changefreq: 'weekly'
     }))

@@ -22,7 +22,8 @@ const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 
 const PARES = [
   { html: 'admin/index.html', css: 'admin/admin.css', js: ['admin/admin.js'] },
-  { html: 'index.html', css: 'css/styles.css', js: ['js/app.js'] }
+  { html: 'index.html', css: 'css/styles.css', js: ['js/app.js'] },
+  { html: 'veiculos.html', css: 'css/styles.css', js: ['js/app.js'] }
 ];
 
 /** Dado um id, devolve as classes daquele elemento no HTML. */

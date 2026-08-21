@@ -7,31 +7,37 @@
     <priority>1.0</priority>
   </url>
   <url>
-    <loc>https://autobayerveiculos.vercel.app/?veiculo=chevrolet-corsa-classic-1-0-vhc-2003</loc>
+    <loc>https://autobayerveiculos.vercel.app/veiculos.html</loc>
+    <lastmod>2026-08-20</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://autobayerveiculos.vercel.app/veiculos.html?veiculo=chevrolet-corsa-classic-1-0-vhc-2003</loc>
     <lastmod>2026-08-20</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://autobayerveiculos.vercel.app/?veiculo=ford-ecosport-freestyle-1-6</loc>
+    <loc>https://autobayerveiculos.vercel.app/veiculos.html?veiculo=ford-ecosport-freestyle-1-6</loc>
     <lastmod>2026-08-20</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://autobayerveiculos.vercel.app/?veiculo=chevrolet-s10-executive-2-8-diesel-4x4</loc>
+    <loc>https://autobayerveiculos.vercel.app/veiculos.html?veiculo=chevrolet-s10-executive-2-8-diesel-4x4</loc>
     <lastmod>2026-08-20</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://autobayerveiculos.vercel.app/?veiculo=honda-cg125-ks-2008</loc>
+    <loc>https://autobayerveiculos.vercel.app/veiculos.html?veiculo=honda-cg125-ks-2008</loc>
     <lastmod>2026-08-20</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://autobayerveiculos.vercel.app/?veiculo=fiat-strada-1-4-fire</loc>
+    <loc>https://autobayerveiculos.vercel.app/veiculos.html?veiculo=fiat-strada-1-4-fire</loc>
     <lastmod>2026-08-20</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>

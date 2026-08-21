@@ -145,14 +145,60 @@
     favToggle: $('#favToggle'),
     favCount: $('#favCount'),
     catalogMain: $('#catalogMain'),
-    vehiclePage: $('#vehiclePage')
+    vehiclePage: $('#vehiclePage'),
+    filters: $('#filters'),
+    filtersToggle: $('#filtersToggle'),
+    filtersCount: $('#filtersCount')
   };
+
+  /* ---------------------------------------------------------------------
+   * Modo da página
+   * ------------------------------------------------------------------ */
+
+  /**
+   * As duas páginas do site compartilham este arquivo — o que muda é o modo:
+   *
+   *   vitrine  (home)          grid com data-limit, sem filtros: mostra só
+   *                            alguns destaques e manda o resto para o estoque.
+   *   catálogo (veiculos.html) grid inteiro, com busca, filtros e abas.
+   *
+   * O modo sai do próprio HTML (presença de data-limit) para não existir uma
+   * segunda lista de "quais páginas são quais" fora do markup.
+   */
+  const PAGINA_ESTOQUE = 'veiculos.html';
+  const modoVitrine = Boolean(elements.grid && elements.grid.hasAttribute('data-limit'));
+  const limiteVitrine = modoVitrine ? Number(elements.grid.dataset.limit) || 6 : 0;
+
+  /**
+   * URL da ficha do veículo. Na home aponta para a página de estoque (que é
+   * a URL canônica da ficha, a que vai no sitemap); lá dentro fica relativa,
+   * e o clique é interceptado para trocar a tela sem recarregar.
+   */
+  const linkVeiculo = (slug) =>
+    `${modoVitrine ? PAGINA_ESTOQUE : ''}?veiculo=${encodeURIComponent(slug)}`;
 
   /* ---------------------------------------------------------------------
    * Filtragem e ordenação
    * ------------------------------------------------------------------ */
 
+  // Veículos vendidos sempre por último, qualquer que seja a ordenação.
+  const bySold = (a, b) => Number(a.sold) - Number(b.sold);
+
+  /** "Destaques": marcados primeiro, depois com selo, depois os mais novos. */
+  const byFeatured = (a, b) =>
+    bySold(a, b) ||
+    Number(b.featured) - Number(a.featured) ||
+    Number(Boolean(b.badge)) - Number(Boolean(a.badge)) ||
+    b.year - a.year;
+
   function getFilteredVehicles() {
+    // Vitrine da home: sem filtros e sem vendidos — só os primeiros destaques.
+    if (modoVitrine) {
+      return VEHICLES.filter((v) => !v.sold)
+        .sort(byFeatured)
+        .slice(0, limiteVitrine);
+    }
+
     const query = state.search.trim().toLowerCase();
 
     const result = VEHICLES.filter((vehicle) => {
@@ -173,23 +219,12 @@
       return true;
     });
 
-    // Veículos vendidos sempre por último, qualquer que seja a ordenação.
-    const bySold = (a, b) => Number(a.sold) - Number(b.sold);
-
     if (state.sort === 'lower') {
       result.sort((a, b) => bySold(a, b) || a.price - b.price);
     } else if (state.sort === 'higher') {
       result.sort((a, b) => bySold(a, b) || b.price - a.price);
     } else {
-      // "Destaques": marcados como featured primeiro, depois com selo, depois
-      // os mais novos. Antes esta opção não reordenava nada.
-      result.sort(
-        (a, b) =>
-          bySold(a, b) ||
-          Number(b.featured) - Number(a.featured) ||
-          Number(Boolean(b.badge)) - Number(Boolean(a.badge)) ||
-          b.year - a.year
-      );
+      result.sort(byFeatured);
     }
 
     return result;
@@ -204,6 +239,10 @@
     const name = `${vehicle.brand} ${vehicle.model}`;
     const badge = vehicle.sold ? 'Vendido' : vehicle.badge;
 
+    // O ano vai duas vezes no HTML — na pastilha ao lado do nome e dentro da
+    // linha de resumo — e o CSS mostra só um dos dois por largura de tela: no
+    // celular a pastilha comeria metade do espaço do nome do modelo.
+    //
     // O card inteiro é clicável através do link "esticado" no título (CSS
     // .vehicle-link::after). Um link de verdade — não role="button" — dá
     // teclado e leitor de tela de graça, URL compartilhável no clique do
@@ -225,13 +264,13 @@
         <div class="vehicle-info">
           <div class="vehicle-title">
             <h3>
-              <a class="vehicle-link" href="?veiculo=${encodeURIComponent(vehicle.slug)}">
+              <a class="vehicle-link" href="${escapeHtml(linkVeiculo(vehicle.slug))}">
                 ${escapeHtml(name)}
               </a>
             </h3>
             <span class="vehicle-year">${escapeHtml(formatYear(vehicle.year))}</span>
           </div>
-          <p class="vehicle-sub">${escapeHtml(vehicle.type)} · ${formatKm(vehicle.km)} · ${escapeHtml(vehicle.gear)}</p>
+          <p class="vehicle-sub"><span class="sub-tipo">${escapeHtml(vehicle.type)} · </span><span class="sub-ano">${escapeHtml(formatYear(vehicle.year))} · </span>${formatKm(vehicle.km)} · ${escapeHtml(vehicle.gear)}</p>
           <div class="vehicle-meta">
             <div>
               <span>À vista</span>
@@ -245,19 +284,23 @@
   }
 
   function render() {
+    if (!elements.grid) return;
     const data = getFilteredVehicles();
 
     elements.grid.innerHTML = data.map(vehicleCardHtml).join('');
-    elements.empty.hidden = data.length > 0;
+    if (elements.empty) elements.empty.hidden = data.length > 0;
 
     // Região aria-live: avisa quem usa leitor de tela que os resultados mudaram.
-    elements.resultCount.textContent =
-      data.length === 0
-        ? 'Nenhum veículo encontrado.'
-        : `${data.length} ${data.length === 1 ? 'veículo encontrado' : 'veículos encontrados'}.`;
+    if (elements.resultCount) {
+      elements.resultCount.textContent =
+        data.length === 0
+          ? 'Nenhum veículo encontrado.'
+          : `${data.length} ${data.length === 1 ? 'veículo encontrado' : 'veículos encontrados'}.`;
+    }
 
     updateCategoryCounts();
     updateFavoritesUi();
+    updateFiltersToggle();
   }
 
   /* ---------------------------------------------------------------------
@@ -265,6 +308,7 @@
    * ------------------------------------------------------------------ */
 
   function buildCategoryTabs() {
+    if (!elements.categoryRow) return;
     const types = Array.from(new Set(VEHICLES.map((v) => v.type))).sort((a, b) =>
       a.localeCompare(b, 'pt-BR')
     );
@@ -287,6 +331,7 @@
 
   /** Contadores calculados a partir dos dados — antes estavam fixos no HTML. */
   function updateCategoryCounts() {
+    if (!elements.categoryRow) return;
     $$('[data-count-for]', elements.categoryRow).forEach((el) => {
       const type = el.dataset.countFor;
       const count = VEHICLES.filter((v) => !v.sold && (type === 'all' || v.type === type)).length;
@@ -295,6 +340,7 @@
   }
 
   function buildBrandOptions() {
+    if (!elements.brand) return;
     const brands = Array.from(new Set(VEHICLES.map((v) => v.brand))).sort((a, b) =>
       a.localeCompare(b, 'pt-BR')
     );
@@ -305,11 +351,30 @@
   }
 
   function updateFavoritesUi() {
+    if (!elements.favToggle) return;
     const count = favorites.ids.size;
     elements.favCount.textContent = count ? `(${count})` : '';
     elements.favToggle.hidden = count === 0 && !state.onlyFavorites;
     elements.favToggle.setAttribute('aria-pressed', String(state.onlyFavorites));
     elements.favToggle.classList.toggle('active', state.onlyFavorites);
+  }
+
+  /**
+   * Quantos filtros estão fora do padrão. No celular os selects ficam num
+   * painel recolhido — sem este número o usuário não tem como saber que a
+   * lista está filtrada por algo que ele não está vendo.
+   */
+  function contarFiltrosAtivos() {
+    return ['brand', 'maxPrice', 'sort'].filter((campo) => state[campo] !== DEFAULT_STATE[campo])
+      .length;
+  }
+
+  function updateFiltersToggle() {
+    if (!elements.filtersToggle || !elements.filtersCount) return;
+    const total = contarFiltrosAtivos();
+    elements.filtersCount.textContent = total ? String(total) : '';
+    elements.filtersCount.hidden = total === 0;
+    elements.filtersToggle.classList.toggle('tem-filtro', total > 0);
   }
 
   /* ---------------------------------------------------------------------
@@ -438,7 +503,7 @@
 
     return `
       <div class="vehicle-page-inner container">
-        <a class="vehicle-page-back" href="./">← Voltar ao estoque</a>
+        <a class="vehicle-page-back" href="${PAGINA_ESTOQUE}">← Voltar ao estoque</a>
         <div class="vehicle-page-grid">
           <div class="vehicle-page-gallery">
             <div class="vehicle-page-main-media">
@@ -461,11 +526,50 @@
       </div>`;
   }
 
+  const tituloOriginal = document.title;
+  const canonicalTag = $('link[rel="canonical"]');
+  const canonicalOriginal = canonicalTag ? canonicalTag.getAttribute('href') : '';
+
+  /**
+   * A ficha do veículo vive dentro de uma das duas páginas, então a canonical
+   * do <head> (que aponta para a própria página) mentiria para o Google
+   * enquanto a ficha está na tela. Aqui ela passa a apontar para a URL única
+   * da ficha — a mesma que vai no sitemap — e volta ao normal na saída.
+   */
+  function setCanonical(url) {
+    if (canonicalTag) canonicalTag.setAttribute('href', url || canonicalOriginal);
+  }
+
+  /** Domínio da canonical, sem o último segmento de caminho. */
+  const canonicalBase = canonicalOriginal.replace(/\/[^/]*$/, '');
+
+  /*
+   * A ficha troca a tela sem recarregar, e a rolagem não é trocada junto:
+   * quem clicava num card do fim da lista caía no meio da ficha em vez do
+   * topo. Guardar onde o catálogo estava também devolve a lista no lugar
+   * certo no "voltar" — o que o navegador faria sozinho se fosse uma
+   * navegação de verdade.
+   */
+  let rolagemDoCatalogo = 0;
+
+  function rolarPara(posicao) {
+    // 'instant' vence o scroll-behavior: smooth do CSS — isto é troca de
+    // tela, não navegação por âncora, e a animação só atrapalharia.
+    try {
+      window.scrollTo({ top: posicao, left: 0, behavior: 'instant' });
+    } catch (error) {
+      window.scrollTo(0, posicao);
+    }
+  }
+
   function renderVehiclePage(vehicle) {
+    if (!elements.vehiclePage || !elements.catalogMain) return;
+    if (!elements.catalogMain.hidden) rolagemDoCatalogo = window.scrollY || window.pageYOffset || 0;
     elements.catalogMain.hidden = true;
     elements.vehiclePage.hidden = false;
     elements.vehiclePage.innerHTML = vehiclePageHtml(vehicle);
     document.title = `${vehicle.brand} ${vehicle.model} | Autobayer Veículos`;
+    setCanonical(`${canonicalBase}/${PAGINA_ESTOQUE}?veiculo=${encodeURIComponent(vehicle.slug)}`);
     const mainImage = $('#vehiclePageMainImage');
     $$('.vehicle-page-thumb', elements.vehiclePage).forEach((thumb) => {
       thumb.addEventListener('click', () => {
@@ -476,13 +580,23 @@
       });
     });
     track('view_vehicle', { vehicle: vehicle.slug, price: vehicle.price });
+    rolarPara(0);
   }
 
   function showCatalogPage() {
+    if (!elements.vehiclePage || !elements.catalogMain) return;
+
+    // Só devolve a rolagem quem está mesmo saindo de uma ficha: no primeiro
+    // carregamento isto rodaria também, e cancelaria o salto de uma âncora.
+    const voltandoDaFicha = !elements.vehiclePage.hidden;
+
     elements.catalogMain.hidden = false;
     elements.vehiclePage.hidden = true;
     elements.vehiclePage.innerHTML = '';
-    document.title = 'Autobayer Veículos | Seminovos em Pato Branco';
+    document.title = tituloOriginal;
+    setCanonical('');
+
+    if (voltandoDaFicha) rolarPara(rolagemDoCatalogo);
   }
 
   function openModal(vehicle, options) {
@@ -507,7 +621,7 @@
   }
 
   function closeModal(options) {
-    if (!modal.backdrop.classList.contains('open')) return;
+    if (!modal.backdrop || !modal.backdrop.classList.contains('open')) return;
     const skipHistory = options && options.skipHistory;
 
     modal.backdrop.classList.remove('open');
@@ -563,8 +677,10 @@
     const aviso = $('#linkAviso');
     if (aviso) {
       aviso.hidden = false;
-      const estoque = document.getElementById('estoque');
-      if (estoque) estoque.scrollIntoView();
+      // A seção do grid, não um id fixo: na home ela é #destaques e na
+      // página de estoque é #estoque.
+      const secao = elements.grid && elements.grid.closest('section');
+      if (secao && secao.scrollIntoView) secao.scrollIntoView();
       track('deep_link_morto', { slug });
     }
   }
@@ -661,6 +777,8 @@
    * ------------------------------------------------------------------ */
 
   function setupCatalogEvents() {
+    if (!elements.grid) return;
+
     elements.grid.addEventListener('click', (event) => {
       const heart = event.target.closest('[data-heart]');
       if (heart) {
@@ -675,8 +793,11 @@
         return;
       }
 
-      // O link do card navegaria de verdade (e funciona se o JS falhar);
-      // com JS ativo interceptamos para abrir o modal sem recarregar.
+      // Na vitrine da home o link leva para a página de estoque: deixa o
+      // navegador navegar de verdade. Só o catálogo, que hospeda a ficha,
+      // intercepta para trocar de tela sem recarregar.
+      if (modoVitrine) return;
+
       const link = event.target.closest('a.vehicle-link');
       const card = event.target.closest('.vehicle-card');
       if (card) {
@@ -690,6 +811,18 @@
         }
       }
     });
+
+    // Filtros recolhidos no celular: o botão abre e fecha o painel.
+    if (elements.filtersToggle && elements.filters) {
+      elements.filtersToggle.addEventListener('click', () => {
+        const aberto = elements.filters.classList.toggle('aberto');
+        elements.filtersToggle.setAttribute('aria-expanded', String(aberto));
+      });
+    }
+
+    // Daqui para baixo é a barra de filtros, que só existe na página de
+    // estoque — na vitrine da home cada elemento simplesmente não está lá.
+    if (!elements.search) return;
 
     // Abas de categoria.
     elements.categoryRow.addEventListener('click', (event) => {
@@ -747,6 +880,11 @@
   }
 
   function setupModalEvents() {
+    // O botão voltar do navegador é o único destes que não depende do modal.
+    window.addEventListener('popstate', () => openFromUrl());
+
+    if (!modal.backdrop) return;
+
     modal.closeButton.addEventListener('click', () => closeModal());
 
     modal.backdrop.addEventListener('click', (event) => {
@@ -766,9 +904,6 @@
       if (event.key === 'Escape') closeModal();
       trapFocus(event);
     });
-
-    // Botão voltar do navegador fecha o modal / reabre o veículo do link.
-    window.addEventListener('popstate', () => openFromUrl());
   }
 
   function setupAnalytics() {

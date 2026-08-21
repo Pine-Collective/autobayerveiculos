@@ -11,8 +11,9 @@
      8.  Seção de confiança e contato
      9.  Rodapé
      10. Modal do veículo
-     11. Responsivo
-     12. Movimento reduzido / impressão
+     11. Botão flutuante do WhatsApp
+     12. Responsivo
+     13. Movimento reduzido / impressão
    ================================================================== */
 
 /* ---------------------------------------------------------------------
@@ -411,9 +412,17 @@ h2 em {
    6. Catálogo: barra de ferramentas e filtros
    ------------------------------------------------------------------ */
 
-.catalog-section {
+.catalog-section,
+.showcase-section {
   padding: 86px 0 105px;
   background: #0c0d0f;
+}
+
+/* Botão "ver estoque completo" no fim da vitrine da home. */
+.showcase-cta {
+  display: flex;
+  justify-content: center;
+  margin-top: 40px;
 }
 
 .section-heading {
@@ -430,6 +439,7 @@ h2 em {
 }
 
 .text-link {
+  display: inline-block;
   background: none;
   border: 0;
   color: #a3a5aa;
@@ -490,6 +500,40 @@ h2 em {
 .filters {
   display: flex;
   gap: 10px;
+}
+
+/* Só existe no celular (ver seção 12): abre e fecha o painel de selects. */
+.filters-toggle {
+  display: none;
+  align-items: center;
+  gap: 7px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 3px;
+  color: #c3c5c9;
+  font:
+    700 11px 'DM Sans',
+    sans-serif;
+  padding: 0 15px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.filters-toggle.tem-filtro {
+  border-color: var(--red);
+  color: #fff;
+}
+
+/* Quantos filtros estão ativos enquanto o painel está fechado — sem isto o
+   usuário não descobre por que a lista está curta. */
+.filters-count {
+  background: var(--red);
+  color: #fff;
+  border-radius: 999px;
+  min-width: 17px;
+  padding: 2px 5px;
+  font-size: 10px;
+  text-align: center;
 }
 
 select {
@@ -601,6 +645,10 @@ select option {
   cursor: pointer;
   transition: 0.25s;
   overflow: hidden;
+  /* Coluna com o rodapé empurrado para baixo: sem isto, um título de duas
+     linhas ao lado de um de uma linha desalinha os dois preços. */
+  display: flex;
+  flex-direction: column;
 }
 
 .vehicle-card:hover,
@@ -638,6 +686,9 @@ select option {
   filter: grayscale(1);
 }
 
+/* 3/4 é a proporção das fotos da loja: com object-fit: contain, a foto
+   preenche o espaço sem recorte nem tarja. O card deixou de ser gigante no
+   celular por mostrar dois por linha (seção 12), não por cortar foto. */
 .vehicle-image {
   aspect-ratio: 3 / 4;
   position: relative;
@@ -699,6 +750,9 @@ select option {
 
 .vehicle-info {
   padding: 19px 18px 20px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
 }
 
 .vehicle-title {
@@ -729,7 +783,12 @@ select option {
   margin: 6px 0 17px;
 }
 
+.vehicle-sub .sub-ano {
+  display: none;
+}
+
 .vehicle-meta {
+  margin-top: auto;
   border-top: 1px solid #292c30;
   padding-top: 13px;
   display: flex;
@@ -1259,7 +1318,51 @@ footer {
 }
 
 /* ---------------------------------------------------------------------
-   11. Responsivo
+   11. Botão flutuante do WhatsApp
+   ------------------------------------------------------------------ */
+
+/* Fica em todas as telas, desktop e celular: parte dos clientes não quer
+   navegar pelo catálogo, quer perguntar direto. z-index 6 = acima do
+   cabeçalho fixo (5) e abaixo do modal (10). */
+.whatsapp-float {
+  position: fixed;
+  right: 22px;
+  bottom: calc(22px + env(safe-area-inset-bottom, 0px));
+  z-index: 6;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 20px;
+  border-radius: 999px;
+  background: #25d366;
+  color: #062613;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  box-shadow: 0 14px 32px #00000073;
+  transition: 0.2s;
+}
+
+.whatsapp-float:hover {
+  background: #1eb455;
+  transform: translateY(-2px);
+}
+
+.whatsapp-float:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 3px;
+}
+
+.whatsapp-float-icon {
+  width: 22px;
+  height: 22px;
+  flex: none;
+  display: block;
+}
+
+/* ---------------------------------------------------------------------
+   12. Responsivo
    ------------------------------------------------------------------ */
 
 @media (max-width: 980px) {
@@ -1404,39 +1507,189 @@ footer {
     padding: 0;
   }
 
+  /* Busca e botão de filtros na mesma linha; os selects só aparecem
+     quando o painel é aberto, para o primeiro carro entrar na tela. */
   .catalog-toolbar {
-    display: block;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 10px;
+    align-items: stretch;
+    margin-bottom: 16px;
   }
 
   .search-box {
-    width: 100%;
-    margin-bottom: 10px;
+    width: auto;
+  }
+
+  .filters-toggle {
+    display: inline-flex;
+    padding: 0 14px;
   }
 
   .filters {
-    display: grid;
+    display: none;
+    grid-column: 1 / -1;
     grid-template-columns: 1fr 1fr;
+  }
+
+  .filters.aberto {
+    display: grid;
+  }
+
+  .filters select {
+    min-width: 0;
   }
 
   .filters select:last-child {
     grid-column: span 2;
   }
 
+  /* Tipos viram pastilhas: alvo de toque maior e sem a régua de rolagem
+     atravessando a tela. */
   .category-wrap {
     display: block;
+    border-bottom: 0;
+    margin-bottom: 18px;
   }
 
   .category-row {
-    gap: 19px;
+    gap: 8px;
+    padding-bottom: 2px;
+    scrollbar-width: none;
+  }
+
+  .category-row::-webkit-scrollbar {
+    display: none;
+  }
+
+  .category {
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    background: var(--surface);
+    padding: 10px 14px;
+    margin-bottom: 0;
+  }
+
+  .category.active,
+  .category:hover {
+    background: var(--red);
+    border-color: var(--red);
+    color: #fff;
+  }
+
+  .category.active small {
+    color: #fff;
+    opacity: 0.75;
   }
 
   .fav-toggle {
-    margin: 0 0 14px;
+    margin: 12px 0 0;
     width: 100%;
   }
 
+  /* Dois cards por linha. Com um só por linha, cinco carros já viravam uma
+     rolagem sem fim — e o estoque só cresce. */
   .vehicle-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
+
+  .vehicle-info {
+    padding: 12px 12px 14px;
+  }
+
+  /* Com metade da largura, a pastilha do ano deixava ~100px para o nome e
+     truncava quase todo modelo. Aqui ela sai e o ano vai para a linha de
+     resumo, no lugar da categoria (que já está nas pastilhas de tipo). */
+  .vehicle-year {
+    display: none;
+  }
+
+  .vehicle-sub .sub-ano {
+    display: inline;
+  }
+
+  .vehicle-sub .sub-tipo {
+    display: none;
+  }
+
+  /* Nome preso em duas linhas: sem isto os cards da mesma linha ficam com
+     alturas bem diferentes. */
+  .vehicle-title h3 {
+    font-size: 18px;
+    line-height: 1.06;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .vehicle-sub {
+    font-size: 10px;
+    margin: 5px 0 11px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .vehicle-meta {
+    padding-top: 10px;
+  }
+
+  .vehicle-meta span {
+    font-size: 9px;
+  }
+
+  .price {
+    font-size: 15px;
+  }
+
+  .price-troca {
+    font-size: 10px;
+  }
+
+  .card-arrow {
+    font-size: 15px;
+  }
+
+  .badge {
+    top: 8px;
+    left: 8px;
+    font-size: 8px;
+    padding: 5px 6px;
+  }
+
+  .heart {
+    top: 8px;
+    right: 8px;
+    width: 29px;
+    height: 29px;
+    font-size: 16px;
+  }
+
+  .showcase-cta .btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  /* Círculo só com o ícone: no celular o rótulo cobriria o conteúdo. */
+  .whatsapp-float {
+    right: 16px;
+    bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+    width: 54px;
+    height: 54px;
+    padding: 0;
+    justify-content: center;
+  }
+
+  .whatsapp-float-label {
+    display: none;
+  }
+
+  .whatsapp-float-icon {
+    width: 27px;
+    height: 27px;
   }
 
   .vehicle-page {
@@ -1510,7 +1763,7 @@ footer {
 }
 
 /* ---------------------------------------------------------------------
-   12. Movimento reduzido / impressão
+   13. Movimento reduzido / impressão
    ------------------------------------------------------------------ */
 
 @media (prefers-reduced-motion: reduce) {
@@ -1546,6 +1799,7 @@ footer {
   .category-wrap,
   .contact-section,
   .modal-backdrop,
+  .whatsapp-float,
   .skip-link {
     display: none !important;
   }

@@ -1,6 +1,10 @@
 /**
- * Teste de fumaça: carrega index.html num DOM real (jsdom), executa os scripts
- * do site e verifica os fluxos principais do catálogo.
+ * Teste de fumaça: carrega as páginas do site num DOM real (jsdom), executa
+ * os scripts e verifica os fluxos principais.
+ *
+ * São duas páginas: veiculos.html (o catálogo com busca e filtros, onde
+ * também mora a ficha de cada veículo) e index.html (a home, que mostra só
+ * uma vitrine de destaques e manda o resto para o catálogo).
  *
  *   npm test          testa os fontes na raiz
  *   npm run test:build  testa a pasta public/ que vai para produção
@@ -68,41 +72,65 @@ const MIME = {
  * Serve os arquivos do próprio site a partir do disco e bloqueia qualquer
  * acesso à rede (Google Fonts, Unsplash), para o teste ser determinístico
  * e rodar offline.
+ *
+ * `substituicoes` troca o conteúdo de um arquivo por outro — é assim que a
+ * vitrine da home é testada com mais carros do que o estoque real tem hoje.
  */
-const localFilesOnly = requestInterceptor(async (request) => {
-  if (!request.url.startsWith(`${ORIGIN}/`)) {
-    return new Response('', { status: 204 });
-  }
-  const relativePath = new URL(request.url).pathname.replace(/^\//, '');
-  try {
-    const body = await readFile(join(root, relativePath));
+const criarInterceptador = (substituicoes) =>
+  requestInterceptor(async (request) => {
+    if (!request.url.startsWith(`${ORIGIN}/`)) {
+      return new Response('', { status: 204 });
+    }
+    const relativePath = new URL(request.url).pathname.replace(/^\//, '');
     const extension = relativePath.split('.').pop();
-    return new Response(body, {
-      headers: { 'Content-Type': MIME[extension] || 'application/octet-stream' }
-    });
-  } catch {
-    return new Response('', { status: 404 });
-  }
-});
 
-const html = await readFile(join(root, 'index.html'), 'utf8');
+    if (substituicoes && substituicoes[relativePath] !== undefined) {
+      return new Response(substituicoes[relativePath], {
+        headers: { 'Content-Type': MIME[extension] || 'application/octet-stream' }
+      });
+    }
 
-const dom = new JSDOM(html, {
-  url: `${ORIGIN}/`,
-  runScripts: 'dangerously',
-  resources: { interceptors: [localFilesOnly] },
-  pretendToBeVisual: true,
-  virtualConsole
-});
+    try {
+      const body = await readFile(join(root, relativePath));
+      return new Response(body, {
+        headers: { 'Content-Type': MIME[extension] || 'application/octet-stream' }
+      });
+    } catch {
+      return new Response('', { status: 404 });
+    }
+  });
+
+const localFilesOnly = criarInterceptador();
+
+/** Sobe uma página do site e espera os scripts terminarem. */
+async function abrirPagina(arquivo, opcoes = {}) {
+  const fonte = await readFile(join(root, arquivo), 'utf8');
+  const pagina = new JSDOM(fonte, {
+    url: opcoes.url || `${ORIGIN}/${arquivo}`,
+    runScripts: 'dangerously',
+    resources: {
+      interceptors: [
+        opcoes.substituicoes ? criarInterceptador(opcoes.substituicoes) : localFilesOnly
+      ]
+    },
+    pretendToBeVisual: true,
+    virtualConsole
+  });
+
+  await new Promise((resolve) => {
+    if (pagina.window.document.readyState === 'complete') resolve();
+    else pagina.window.addEventListener('load', resolve);
+  });
+  await tick(50);
+  return { dom: pagina, fonte };
+}
+
+// A página principal dos testes é o catálogo: é ela que tem busca, filtros,
+// abas e a ficha do veículo.
+const { dom, fonte: htmlEstoque } = await abrirPagina('veiculos.html');
 
 const { window } = dom;
 const { document } = window;
-
-await new Promise((resolve) => {
-  if (document.readyState === 'complete') resolve();
-  else window.addEventListener('load', resolve);
-});
-await tick(50);
 
 const $ = (sel) => document.querySelector(sel);
 const $$ = (sel) => Array.from(document.querySelectorAll(sel));
@@ -340,7 +368,7 @@ $('#favToggle').dispatchEvent(new window.MouseEvent('click', { bubbles: true }))
 check('filtro "só favoritos" mostra apenas 1', cards().length === 1, `${cards().length}`);
 $('#favToggle').dispatchEvent(new window.MouseEvent('click', { bubbles: true }));
 
-check('clicar no coração não abre o modal', !$('#modalBackdrop').classList.contains('open'));
+check('clicar no coração não abre a ficha do veículo', $('#vehiclePage').hidden);
 
 /* ------------------------------------------------------------------ */
 console.log('\n9. Página individual, deep link e fotos');
@@ -376,16 +404,28 @@ check(
   decodeURIComponent(waHref)
 );
 check('ficha técnica usa dl/dt/dd', $$('#vehiclePage .detail-list dt').length === 5);
+check(
+  'canonical passa a apontar para a ficha, não para a página de estoque',
+  $('link[rel="canonical"]')
+    .getAttribute('href')
+    .endsWith(`/veiculos.html?veiculo=${targetVehicle.slug}`),
+  $('link[rel="canonical"]').getAttribute('href')
+);
 
 const itensPagina = $$('#vehiclePage .vehicle-page-features li');
 check('página lista os itens do veículo', itensPagina.length > 0, `${itensPagina.length}`);
 check('itens batem com os dados', itensPagina.length === targetVehicle.features.length);
 check('página mostra o preço na troca', $('#vehiclePage .vehicle-page-price small') !== null);
 
-window.history.pushState({}, '', '/');
+window.history.pushState({}, '', '/veiculos.html');
 window.dispatchEvent(new window.PopStateEvent('popstate'));
 check('URL volta ao normal', window.location.search === '', window.location.search);
 check('voltar mostra o catálogo', !$('#catalogMain').hidden && $('#vehiclePage').hidden);
+check(
+  'canonical volta para a da página de estoque',
+  $('link[rel="canonical"]').getAttribute('href').endsWith('/veiculos.html'),
+  $('link[rel="canonical"]').getAttribute('href')
+);
 
 /* ------------------------------------------------------------------ */
 console.log('\n10. Acessibilidade e links reais nos cards');
@@ -407,7 +447,7 @@ check(
 
 kbLink.dispatchEvent(new window.MouseEvent('click', { bubbles: true, cancelable: true }));
 check('clicar no link abre a página individual', !$('#vehiclePage').hidden);
-window.history.pushState({}, '', '/');
+window.history.pushState({}, '', '/veiculos.html');
 window.dispatchEvent(new window.PopStateEvent('popstate'));
 
 check(
@@ -432,6 +472,33 @@ nav.querySelector('a').dispatchEvent(new window.MouseEvent('click', { bubbles: t
 check('clicar num link fecha o menu', !nav.classList.contains('open'));
 
 /* ------------------------------------------------------------------ */
+console.log('\n11b. Painel de filtros recolhido (celular)');
+/* ------------------------------------------------------------------ */
+
+// No celular os selects ficam atrás de um botão; o número ao lado dele é a
+// única pista de que a lista está filtrada por algo fora da tela.
+const filtersToggle = $('#filtersToggle');
+const filtersPanel = $('#filters');
+check('botão de filtros existe', Boolean(filtersToggle));
+check('painel de filtros começa fechado', !filtersPanel.classList.contains('aberto'));
+check('aria-expanded começa em false', filtersToggle.getAttribute('aria-expanded') === 'false');
+
+filtersToggle.dispatchEvent(new window.MouseEvent('click', { bubbles: true }));
+check('clique abre o painel', filtersPanel.classList.contains('aberto'));
+check('aria-expanded acompanha', filtersToggle.getAttribute('aria-expanded') === 'true');
+filtersToggle.dispatchEvent(new window.MouseEvent('click', { bubbles: true }));
+check('clique de novo fecha', !filtersPanel.classList.contains('aberto'));
+
+check('contador de filtros escondido sem filtro ativo', $('#filtersCount').hidden);
+setSelect('#priceFilter', '150000');
+check('contador aparece com 1 filtro ativo', !$('#filtersCount').hidden);
+check('contador mostra quantos', $('#filtersCount').textContent === '1');
+setSelect('#brandFilter', VEHICLES[0].brand);
+check('dois filtros somam 2', $('#filtersCount').textContent === '2');
+$('#clearFilters').dispatchEvent(new window.MouseEvent('click', { bubbles: true }));
+check('limpar filtros zera o contador', $('#filtersCount').hidden);
+
+/* ------------------------------------------------------------------ */
 console.log('\n12. SEO e dados estruturados');
 /* ------------------------------------------------------------------ */
 
@@ -439,15 +506,10 @@ console.log('\n12. SEO e dados estruturados');
 // resolve ao montar public/ — então as expectativas mudam conforme o alvo.
 const testandoBuild = root !== projectRoot;
 
-const ldScripts = $$('script[type="application/ld+json"]');
-const parsed = ldScripts.map((s) => JSON.parse(s.textContent));
-check(
-  'JSON-LD do negócio (AutoDealer) presente',
-  parsed.some((p) => p['@type'] === 'AutoDealer')
-);
+const parsed = $$('script[type="application/ld+json"]').map((tag) => JSON.parse(tag.textContent));
 
 if (testandoBuild) {
-  check('nenhum placeholder __SITE_URL__ sobrou no build', !html.includes('__SITE_URL__'));
+  check('nenhum placeholder __SITE_URL__ sobrou no build', !htmlEstoque.includes('__SITE_URL__'));
   check(
     'canonical resolvida para o domínio do config',
     /^https:\/\//.test($('link[rel="canonical"]').getAttribute('href')),
@@ -455,19 +517,24 @@ if (testandoBuild) {
   );
 
   const itemList = parsed.find((p) => p['@type'] === 'ItemList');
-  check('build injeta o JSON-LD do estoque no HTML', Boolean(itemList));
+  check('build injeta o JSON-LD do estoque na página de veículos', Boolean(itemList));
   check(
     'ItemList lista os carros disponíveis com preço',
     itemList &&
       itemList.itemListElement.length === VEHICLES.filter((v) => !v.sold).length &&
       itemList.itemListElement.every((i) => i.item.offers.price > 0)
   );
+  check(
+    'URLs do schema apontam para a ficha em veiculos.html',
+    itemList &&
+      itemList.itemListElement.every((i) => i.item.url.includes('/veiculos.html?veiculo='))
+  );
 } else {
   check(
     'fonte mantém o marcador para o build injetar o schema do estoque',
-    html.includes('__SCHEMA_ESTOQUE__')
+    htmlEstoque.includes('__SCHEMA_ESTOQUE__')
   );
-  check('fonte usa o placeholder de domínio', html.includes('__SITE_URL__'));
+  check('fonte usa o placeholder de domínio', htmlEstoque.includes('__SITE_URL__'));
 }
 
 check('og:image definida', !!$('meta[property="og:image"]'));
@@ -535,7 +602,7 @@ check(
   'mensagem do WhatsApp pede algo parecido',
   /parecido/.test(decodeURIComponent($('[data-cta="whatsapp-page"]').getAttribute('href')))
 );
-window.history.pushState({}, '', '/');
+window.history.pushState({}, '', '/veiculos.html');
 window.dispatchEvent(new window.PopStateEvent('popstate'));
 
 VEHICLES.find((v) => v.id === 5).sold = false;
@@ -576,18 +643,9 @@ console.log('\n16. Deep link para veículo que saiu do estoque');
 
 // Nova página aberta direto num link compartilhado de carro removido:
 // o site precisa avisar, não ficar em silêncio.
-const domLinkMorto = new JSDOM(html, {
-  url: `${ORIGIN}/?veiculo=carro-que-nao-existe`,
-  runScripts: 'dangerously',
-  resources: { interceptors: [localFilesOnly] },
-  pretendToBeVisual: true,
-  virtualConsole
+const { dom: domLinkMorto } = await abrirPagina('veiculos.html', {
+  url: `${ORIGIN}/veiculos.html?veiculo=carro-que-nao-existe`
 });
-await new Promise((resolve) => {
-  if (domLinkMorto.window.document.readyState === 'complete') resolve();
-  else domLinkMorto.window.addEventListener('load', resolve);
-});
-await tick(80);
 
 const qMorto = (sel) => domLinkMorto.window.document.querySelector(sel);
 check('aviso de link morto aparece', qMorto('#linkAviso') && !qMorto('#linkAviso').hidden);
@@ -597,6 +655,184 @@ check(
   domLinkMorto.window.document.querySelectorAll('.vehicle-card').length > 0
 );
 domLinkMorto.window.close();
+
+/* ------------------------------------------------------------------ */
+console.log('\n17. Home: vitrine de destaques');
+/* ------------------------------------------------------------------ */
+
+// O jsdom já reclamou de coisas que só ele não implementa (navegação de
+// verdade ao clicar num link do menu, scrollIntoView). O que importa aqui é
+// que a HOME não acrescente nenhum erro novo ao rodar sem barra de filtros.
+const errosAntesDaHome = consoleErrors.length;
+
+const { dom: domHome, fonte: htmlHome } = await abrirPagina('index.html', {
+  url: `${ORIGIN}/`
+});
+const home = domHome.window.document;
+const qHome = (sel) => home.querySelector(sel);
+const qqHome = (sel) => Array.from(home.querySelectorAll(sel));
+const cardsHome = () => qqHome('.vehicle-card');
+// Do array da própria home: o do catálogo já foi mexido pelos testes de
+// veículo vendido e de XSS lá em cima.
+const disponiveis = domHome.window.AUTOBAYER_VEHICLES.filter((v) => !v.sold).length;
+
+check('home tem grid de veículos', Boolean(qHome('#vehicleGrid')));
+check(
+  'grid da home declara o limite da vitrine',
+  qHome('#vehicleGrid').dataset.limit === '6',
+  qHome('#vehicleGrid').dataset.limit
+);
+check(
+  `home mostra os ${Math.min(6, disponiveis)} destaques, não o estoque inteiro`,
+  cardsHome().length === Math.min(6, disponiveis),
+  `${cardsHome().length} cards`
+);
+check(
+  'cards da home levam para a ficha em veiculos.html',
+  cardsHome().every((c) =>
+    /^veiculos\.html\?veiculo=[a-z0-9-]+$/.test(
+      c.querySelector('a.vehicle-link').getAttribute('href')
+    )
+  ),
+  cardsHome()[0].querySelector('a.vehicle-link').getAttribute('href')
+);
+check('home não carrega a barra de filtros', qHome('#searchInput') === null);
+check('home não carrega as abas de tipo', qHome('#categoryRow') === null);
+check(
+  'home tem chamada para o estoque completo',
+  qqHome('a[href="veiculos.html"]').length >= 2,
+  `${qqHome('a[href="veiculos.html"]').length} links`
+);
+check(
+  'JSON-LD do negócio (AutoDealer) fica na home',
+  qqHome('script[type="application/ld+json"]')
+    .map((tag) => JSON.parse(tag.textContent))
+    .some((dado) => dado['@type'] === 'AutoDealer')
+);
+check(
+  'home não quebra sem a barra de filtros',
+  consoleErrors.length === errosAntesDaHome,
+  consoleErrors.slice(errosAntesDaHome).join(' | ')
+);
+
+/* ------------------------------------------------------------------ */
+console.log('\n17b. Corte da vitrine com estoque grande');
+/* ------------------------------------------------------------------ */
+
+// O estoque real tem 5 carros, então o corte em 6 nunca apareceria. Aqui a
+// home é aberta com um estoque inventado de 12 — que é o cenário que motivou
+// a mudança: "quando tiver mais carros, vai ficar um scroll gigantesco".
+const estoqueGrande = Array.from({ length: 12 }, (_, i) => ({
+  id: 100 + i,
+  slug: `carro-de-teste-${i}`,
+  brand: 'Marca',
+  model: `Modelo ${i}`,
+  year: 2000 + i,
+  type: 'SUV',
+  km: 1000,
+  price: 50000,
+  priceTroca: 51000,
+  images: ['assets/favicon.svg'],
+  features: [],
+  badge: '',
+  featured: i === 11,
+  sold: i === 0,
+  fuel: 'Flex',
+  gear: 'Manual',
+  color: 'Preto',
+  doors: 4
+}));
+
+const { dom: domCheia } = await abrirPagina('index.html', {
+  url: `${ORIGIN}/`,
+  substituicoes: {
+    'js/vehicles.js': `window.AUTOBAYER_VEHICLES = ${JSON.stringify(estoqueGrande)};`
+  }
+});
+const cardsCheia = Array.from(domCheia.window.document.querySelectorAll('.vehicle-card'));
+
+check(
+  'vitrine corta em 6 mesmo com 12 no estoque',
+  cardsCheia.length === 6,
+  `${cardsCheia.length}`
+);
+check(
+  'vitrine não mostra vendidos',
+  !cardsCheia.some((c) => Number(c.dataset.id) === 100),
+  cardsCheia.map((c) => c.dataset.id).join(', ')
+);
+check(
+  'o marcado como destaque vem primeiro',
+  Number(cardsCheia[0].dataset.id) === 111,
+  `primeiro id=${cardsCheia[0].dataset.id}`
+);
+domCheia.window.close();
+
+/* ------------------------------------------------------------------ */
+console.log('\n18. Botão flutuante do WhatsApp');
+/* ------------------------------------------------------------------ */
+
+// Existe para quem não quer navegar o catálogo: abre a conversa direto.
+for (const [nome, doc] of [
+  ['home', home],
+  ['estoque', document]
+]) {
+  const flutuante = doc.querySelector('.whatsapp-float');
+  check(`botão flutuante presente na ${nome}`, Boolean(flutuante));
+  check(
+    `botão flutuante da ${nome} aponta para o WhatsApp do config`,
+    flutuante && flutuante.href.startsWith('https://wa.me/554699226135?text='),
+    flutuante && flutuante.href
+  );
+  check(
+    `botão flutuante da ${nome} é rastreado no analytics`,
+    flutuante && flutuante.dataset.cta === 'whatsapp-flutuante'
+  );
+  check(
+    `botão flutuante da ${nome} tem nome acessível`,
+    flutuante && Boolean(flutuante.getAttribute('aria-label'))
+  );
+  check(
+    `botão flutuante da ${nome} abre em nova aba com rel=noopener`,
+    flutuante && (flutuante.getAttribute('rel') || '').includes('noopener')
+  );
+}
+
+/* ------------------------------------------------------------------ */
+console.log('\n19. Topo e rodapé iguais nas duas páginas');
+/* ------------------------------------------------------------------ */
+
+// As duas páginas repetem o mesmo cabeçalho/rodapé no HTML (o site não tem
+// motor de templates). Estas verificações existem para o dia em que alguém
+// mudar o telefone só num dos dois arquivos.
+const recorte = (fonte, inicio, fim) => {
+  const i = fonte.indexOf(inicio);
+  const j = fonte.indexOf(fim, i);
+  return i === -1 || j === -1 ? null : fonte.slice(i, j + fim.length);
+};
+
+for (const [nome, inicio, fim] of [
+  ['topbar', '<div class="topbar">', '</div>\n    </div>'],
+  ['rodapé', '<footer>', '</footer>'],
+  ['botão flutuante', '<a\n      class="whatsapp-float"', '</a>']
+]) {
+  const naHome = recorte(htmlHome, inicio, fim);
+  const noEstoque = recorte(htmlEstoque, inicio, fim);
+  check(
+    `${nome} idêntico nas duas páginas`,
+    Boolean(naHome) && naHome === noEstoque,
+    naHome === noEstoque ? 'ausente em uma delas' : 'divergiram'
+  );
+}
+
+check(
+  'as duas páginas carregam os mesmos três scripts',
+  ['js/config.js', 'js/vehicles.js', 'js/app.js'].every(
+    (src) => htmlHome.includes(src) && htmlEstoque.includes(src)
+  )
+);
+
+domHome.window.close();
 
 /* ------------------------------------------------------------------ */
 
