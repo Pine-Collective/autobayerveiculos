@@ -78,6 +78,32 @@
         </header>
 
         <form class="formulario" id="formVeiculo">
+          <!-- Cola o anúncio do WhatsApp/Facebook e o formulário se preenche.
+               Rascunho: o que o anúncio não diz (ano, cor, fotos) fica em
+               branco e é apontado nos avisos. -->
+          <div class="colar-anuncio">
+            <button class="btn btn-secundario" id="botaoColarAnuncio" type="button">
+              📋 Colar anúncio pronto
+            </button>
+            <div class="colar-anuncio-caixa" id="colarAnuncioCaixa" hidden>
+              <label class="visually-hidden" for="textoAnuncio">Texto do anúncio</label>
+              <textarea
+                id="textoAnuncio"
+                rows="8"
+                placeholder="Cole aqui o texto do anúncio, do jeito que está escrito.&#10;&#10;Exemplo:&#10;Corsa classic 1.0 VHC&#10;Ano 2003&#10;Km:267.000&#10;Avista R$15.900,00&#10;Na troca R$16.900,00"
+              ></textarea>
+              <div class="colar-anuncio-acoes">
+                <button class="btn btn-primary" id="botaoInterpretar" type="button">
+                  Preencher formulário
+                </button>
+                <button class="btn btn-ghost" id="botaoCancelarAnuncio" type="button">
+                  Cancelar
+                </button>
+              </div>
+            </div>
+            <div class="avisos-parser" id="avisosParser" hidden></div>
+          </div>
+
           <div class="campo-linha">
             <div class="campo">
               <label for="f-brand">Marca</label>
@@ -102,14 +128,27 @@
 
           <div class="campo-linha">
             <div class="campo">
-              <label for="f-price">Preço (R$)</label>
+              <label for="f-price">Preço à vista (R$)</label>
               <input id="f-price" name="price" inputmode="numeric" required />
               <small id="dicaPreco">&nbsp;</small>
             </div>
             <div class="campo">
+              <label for="f-priceTroca">Preço na troca (R$)</label>
+              <input id="f-priceTroca" name="priceTroca" inputmode="numeric" />
+              <small id="dicaPrecoTroca">opcional</small>
+            </div>
+          </div>
+
+          <div class="campo-linha">
+            <div class="campo">
               <label for="f-km">Quilometragem</label>
               <input id="f-km" name="km" inputmode="numeric" required />
               <small id="dicaKm">&nbsp;</small>
+            </div>
+            <div class="campo" id="campoPortas">
+              <label for="f-doors">Portas</label>
+              <input id="f-doors" name="doors" type="number" inputmode="numeric" />
+              <small>&nbsp;</small>
             </div>
           </div>
 
@@ -130,14 +169,19 @@
               <input id="f-color" name="color" />
             </div>
             <div class="campo">
-              <label for="f-doors">Portas</label>
-              <input id="f-doors" name="doors" type="number" inputmode="numeric" />
+              <label for="f-badge">Selo na foto</label>
+              <select id="f-badge" name="badge"></select>
             </div>
           </div>
 
           <div class="campo">
-            <label for="f-badge">Selo na foto</label>
-            <select id="f-badge" name="badge"></select>
+            <label for="f-features">Itens e opcionais</label>
+            <p class="ajuda">
+              Um por linha. É o que o comprador procura: ar condicionado, direção hidráulica, vidros
+              elétricos.
+            </p>
+            <textarea id="f-features" name="features" rows="6"></textarea>
+            <small id="contagemFeatures">&nbsp;</small>
           </div>
 
           <fieldset class="marcadores">
@@ -190,8 +234,10 @@
       </div>
     </div>
 
-    <!-- schema.js é gerado de lib/vehicle-schema.mjs (npm run data) -->
+    <!-- Gerados de lib/ por npm run data — a ordem importa: o parser depende
+         do schema, e o admin depende dos dois. -->
     <script src="/admin/schema.js"></script>
+    <script src="/admin/parser.js"></script>
     <script src="/admin/admin.js"></script>
   </body>
 </html>

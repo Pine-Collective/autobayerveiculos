@@ -345,7 +345,19 @@ check(
 );
 check(
   'tipo inválido é detectado',
-  validarEstoque([{ ...estoqueValido[0], type: 'Moto' }]).some((p) => /tipo/.test(p))
+  validarEstoque([{ ...estoqueValido[0], type: 'Trator' }]).some((p) => /tipo/.test(p))
+);
+check(
+  'Moto agora é um tipo válido',
+  validarEstoque([{ ...estoqueValido[0], type: 'Moto', doors: undefined }]).length === 0
+);
+check(
+  'moto com número de portas é recusada',
+  validarEstoque([{ ...estoqueValido[0], type: 'Moto', doors: 4 }]).some((p) => /moto/.test(p))
+);
+check(
+  'item em branco na lista de opcionais é recusado',
+  validarEstoque([{ ...estoqueValido[0], features: ['Ar', '  '] }]).some((p) => /branco/.test(p))
 );
 check(
   'veículo sem foto é detectado',
@@ -478,8 +490,13 @@ check(
 );
 check('folha de estilo do admin carregou', Boolean(q('link[href="/admin/admin.css"]')));
 check('schema.js gerado está referenciado', Boolean(q('script[src="/admin/schema.js"]')));
-check('menus vêm da fonte única (4 tipos)', qq('#f-type option').length === 4);
-check('menu de selos inclui a opção vazia', qq('#f-badge option').length === 5);
+check('menus vêm da fonte única (6 tipos, com Moto e Perua)', qq('#f-type option').length === 6);
+check(
+  'tipo Moto disponível no menu',
+  qq('#f-type option').some((o) => o.value === 'Moto')
+);
+check('menu de selos inclui "Sem sinistro"', qq('#f-badge option').length === 6);
+check('parser.js gerado está referenciado', Boolean(q('script[src="/admin/parser.js"]')));
 check(
   'login tem campo de usuário para gerenciador de senha',
   !!q('input[autocomplete="username"]')
@@ -650,6 +667,128 @@ const toro = lerRepoJson().find((v) => v.model === 'Toro Freedom');
 check('veículo novo foi gravado', Boolean(toro));
 check('slug foi gerado sozinho', toro?.slug === 'fiat-toro-freedom-2023', toro?.slug);
 check('preço foi gravado como número', toro?.price === 145900, String(toro?.price));
+
+/* --- Colar anúncio preenche o formulário ------------------------------ */
+
+clicar(q('#botaoNovo'));
+await tick();
+clicar(q('#botaoColarAnuncio'));
+await tick();
+check('caixa de colar anúncio abre', !q('#colarAnuncioCaixa').hidden);
+
+q('#textoAnuncio').value = [
+  'Corsa classic 1.0 VHC',
+  'Desembaçador',
+  'Vidros manuais',
+  'Ano 2003',
+  'Km:267.000',
+  '4 portas',
+  'Avista R$15.900,00',
+  'Na troca R$16.900,00',
+  'Faço financiamento'
+].join('\n');
+clicar(q('#botaoInterpretar'));
+await tick();
+
+check('marca deduzida chega ao campo', q('#f-brand').value === 'Chevrolet', q('#f-brand').value);
+check('ano preenchido', q('#f-year').value === '2003', q('#f-year').value);
+check('tipo deduzido (Sedan, não Hatch)', q('#f-type').value === 'Sedan', q('#f-type').value);
+check('km com máscara', q('#f-km').value === '267.000', q('#f-km').value);
+check('preço à vista preenchido', q('#f-price').value === '15.900', q('#f-price').value);
+check('preço na troca preenchido', q('#f-priceTroca').value === '16.900', q('#f-priceTroca').value);
+check('itens viraram linhas do textarea', q('#f-features').value.split('\n').length === 2);
+check('"faço financiamento" não virou item', !/financiamento/i.test(q('#f-features').value));
+check('avisos do parser aparecem', !q('#avisosParser').hidden);
+check(
+  'aviso cita cor e fotos',
+  /Cor e fotos/.test(q('#avisosParser').textContent),
+  q('#avisosParser').textContent.slice(0, 80)
+);
+check('caixa de colar fecha após interpretar', q('#colarAnuncioCaixa').hidden);
+
+// Completa e publica o que veio do anúncio.
+q('#f-color').value = 'Prata';
+clicar(q('#botaoUrl'));
+q('#campoUrlFoto').value = 'assets/veiculos/corsa.webp';
+clicar(q('#botaoAdicionarUrl'));
+await tick();
+submeter(q('#formVeiculo'));
+await tick();
+check('veículo do anúncio entra na lista', qq('#lista .item').length === 8);
+check(
+  'card do painel mostra o preço na troca',
+  /troca/i.test(q('#lista').textContent),
+  'sem menção a troca'
+);
+
+clicar(q('#botaoSalvar'));
+await tick(300);
+const corsa = lerRepoJson().find((v) => v.model.startsWith('Corsa'));
+check('anúncio colado foi publicado', Boolean(corsa));
+check('priceTroca gravado', corsa?.priceTroca === 16900, String(corsa?.priceTroca));
+check('features gravadas', corsa?.features.length === 2, JSON.stringify(corsa?.features));
+check('doors do texto respeitado', corsa?.doors === 4, String(corsa?.doors));
+
+/* --- Moto: sem portas ------------------------------------------------- */
+
+clicar(q('#botaoNovo'));
+await tick();
+check('campo portas visível por padrão', !q('#campoPortas').hidden);
+
+q('#f-type').value = 'Moto';
+q('#f-type').dispatchEvent(new window.Event('change', { bubbles: true }));
+await tick();
+check('escolher Moto esconde o campo portas', q('#campoPortas').hidden);
+
+q('#f-brand').value = 'Honda';
+q('#f-model').value = 'CG 125 KS';
+q('#f-year').value = '2003';
+q('#f-price').value = '7200';
+q('#f-price').dispatchEvent(new window.Event('input', { bubbles: true }));
+q('#f-priceTroca').value = '8200';
+q('#f-priceTroca').dispatchEvent(new window.Event('input', { bubbles: true }));
+clicar(q('#botaoUrl'));
+q('#campoUrlFoto').value = 'assets/veiculos/cg125.webp';
+clicar(q('#botaoAdicionarUrl'));
+await tick();
+submeter(q('#formVeiculo'));
+await tick();
+check('moto entra na lista', qq('#lista .item').length === 9);
+
+clicar(q('#botaoSalvar'));
+await tick(300);
+const moto = lerRepoJson().find((v) => v.type === 'Moto');
+check('moto foi publicada', Boolean(moto));
+check('moto gravada sem portas', moto && moto.doors === undefined, String(moto?.doors));
+
+/* --- Troca menor que à vista é barrada -------------------------------- */
+
+clicar(q('#botaoNovo'));
+await tick();
+q('#f-brand').value = 'Fiat';
+q('#f-model').value = 'Uno';
+q('#f-year').value = '2010';
+q('#f-price').value = '20000';
+q('#f-price').dispatchEvent(new window.Event('input', { bubbles: true }));
+q('#f-priceTroca').value = '15000';
+q('#f-priceTroca').dispatchEvent(new window.Event('input', { bubbles: true }));
+await tick();
+check(
+  'dica avisa que a troca ficou menor',
+  /menor que o à vista/.test(q('#dicaPrecoTroca').textContent),
+  q('#dicaPrecoTroca').textContent
+);
+
+clicar(q('#botaoUrl'));
+q('#campoUrlFoto').value = 'assets/veiculos/uno.webp';
+clicar(q('#botaoAdicionarUrl'));
+await tick();
+submeter(q('#formVeiculo'));
+await tick();
+check('formulário barra troca menor que à vista', !q('#avisoFormulario').hidden);
+check('editor continua aberto', !q('#modalEditor').hidden);
+clicar(q('#botaoCancelar'));
+await tick();
 
 /* --- Segundo carro idêntico: slug ganha sufixo ------------------------ */
 

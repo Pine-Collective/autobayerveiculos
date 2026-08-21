@@ -41,6 +41,16 @@ test.describe('Site público', () => {
     await expect(page.locator('.vehicle-card').first()).toBeVisible();
   });
 
+  test('modal mostra itens do veículo e preço na troca', async ({ page }) => {
+    await page.goto('/?veiculo=toyota-corolla-xei-2021');
+    await expect(page.locator('#vehicleModal')).toBeVisible();
+
+    await expect(page.locator('.modal-features li').first()).toBeVisible();
+    await expect(page.locator('.modal-features')).toContainText('Ar condicionado');
+    await expect(page.locator('.modal-price .price-troca')).toBeVisible();
+    await expect(page.locator('.modal-price .price-troca')).toContainText('Na troca');
+  });
+
   test('filtro de preço e estado vazio', async ({ page }) => {
     await page.goto('/');
     await page.locator('#priceFilter').selectOption('80000');

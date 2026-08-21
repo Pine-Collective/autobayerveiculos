@@ -45,11 +45,11 @@ const schemaEstoque = {
   '@type': 'ItemList',
   name: 'Estoque Autobayer Veículos',
   numberOfItems: disponiveis.length,
-  itemListElement: disponiveis.map((vehicle, index) => ({
-    '@type': 'ListItem',
-    position: index + 1,
-    item: {
-      '@type': 'Car',
+  itemListElement: disponiveis.map((vehicle, index) => {
+    const item = {
+      // schema.org tem tipo próprio para moto; usar "Car" para uma CG 125
+      // seria dado errado para o Google.
+      '@type': vehicle.type === 'Moto' ? 'Motorcycle' : 'Car',
       name: `${vehicle.brand} ${vehicle.model} ${vehicle.year}`,
       brand: { '@type': 'Brand', name: vehicle.brand },
       model: vehicle.model,
@@ -58,7 +58,6 @@ const schemaEstoque = {
       color: vehicle.color,
       fuelType: vehicle.fuel,
       vehicleTransmission: vehicle.gear,
-      numberOfDoors: vehicle.doors,
       mileageFromOdometer: { '@type': 'QuantitativeValue', value: vehicle.km, unitCode: 'KMT' },
       image: vehicle.images.map((img) =>
         /^(https?:)?\/\//.test(img) ? img : `${siteUrl}/${img.replace(/^\/+/, '')}`
@@ -66,13 +65,18 @@ const schemaEstoque = {
       url: `${siteUrl}/?veiculo=${encodeURIComponent(vehicle.slug)}`,
       offers: {
         '@type': 'Offer',
-        price: vehicle.price,
+        price: vehicle.price, // sempre o à vista
         priceCurrency: 'BRL',
         availability: 'https://schema.org/InStock',
         seller: { '@type': 'AutoDealer', name: config.nome }
       }
-    }
-  }))
+    };
+
+    if (vehicle.doors) item.numberOfDoors = vehicle.doors;
+    if (vehicle.features?.length) item.vehicleConfiguration = vehicle.features.join(', ');
+
+    return { '@type': 'ListItem', position: index + 1, item };
+  })
 };
 
 const blocoSchema = `<script type="application/ld+json">${JSON.stringify(schemaEstoque)}</script>`;

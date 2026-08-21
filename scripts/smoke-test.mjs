@@ -262,6 +262,24 @@ check(
 check('quilometragem com separador de milhar', /42\.300 km/.test(cardText));
 
 /* ------------------------------------------------------------------ */
+console.log('\n7b. Dois preços e lista de itens');
+/* ------------------------------------------------------------------ */
+
+// Todo anúncio da loja tem "à vista" e "na troca" — o card mostra os dois.
+const comTroca = VEHICLES.find((v) => v.priceTroca);
+const cardComTroca = cards().find((c) => Number(c.dataset.id) === comTroca.id);
+check('card rotula o preço como "À vista"', /À vista/.test(cardComTroca.textContent));
+check(
+  'card mostra o preço na troca',
+  cardComTroca.querySelector('.price-troca') !== null &&
+    /na troca/i.test(cardComTroca.querySelector('.price-troca').textContent)
+);
+
+const semTroca = VEHICLES.find((v) => !v.priceTroca);
+const cardSemTroca = cards().find((c) => Number(c.dataset.id) === semTroca.id);
+check('sem preço na troca, nada é exibido', cardSemTroca.querySelector('.price-troca') === null);
+
+/* ------------------------------------------------------------------ */
 console.log('\n8. Favoritos persistentes');
 /* ------------------------------------------------------------------ */
 
@@ -319,6 +337,14 @@ check(
   decodeURIComponent(waHref)
 );
 check('ficha técnica usa dl/dt/dd', $$('.detail-list dt').length === 6);
+
+const itensModal = $$('.modal-features li');
+check('modal lista os itens do veículo', itensModal.length > 0, `${itensModal.length}`);
+check(
+  'itens batem com os dados',
+  itensModal.length === VEHICLES.find((v) => v.id === 2).features.length
+);
+check('modal mostra o preço na troca', $('.modal-price .price-troca') !== null);
 
 // Esc fecha
 document.dispatchEvent(new window.KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));

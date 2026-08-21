@@ -132,6 +132,38 @@ test.describe('Painel do estoque', () => {
     expect(duster.slug).toBe('renault-duster-iconic-2024');
   });
 
+  test('colar anúncio preenche o formulário e Moto esconde portas', async ({ page }) => {
+    await entrar(page);
+    await page.locator('#botaoNovo').click();
+
+    await page.locator('#botaoColarAnuncio').click();
+    await page
+      .locator('#textoAnuncio')
+      .fill(
+        [
+          'Cg125 KS 2003',
+          'Motor bom',
+          'Piscas de led',
+          'Km:45.000',
+          'Avista R$7.200,00',
+          'Na troca R$8.200,00',
+          'Faço financiamento'
+        ].join('\n')
+      );
+    await page.locator('#botaoInterpretar').click();
+
+    // Marca deduzida, tipo Moto reconhecido, portas sumindo de verdade.
+    await expect(page.locator('#f-brand')).toHaveValue('Honda');
+    await expect(page.locator('#f-type')).toHaveValue('Moto');
+    await expect(page.locator('#f-price')).toHaveValue('7.200');
+    await expect(page.locator('#f-priceTroca')).toHaveValue('8.200');
+    await expect(page.locator('#campoPortas')).toBeHidden();
+    await expect(page.locator('#avisosParser')).toBeVisible();
+
+    // "Faço financiamento" é condição de pagamento, não item do veículo.
+    await expect(page.locator('#f-features')).not.toHaveValue(/financiamento/i);
+  });
+
   test('a foto publicada é servida e aparece no card', async ({ page }) => {
     await entrar(page);
     // O item criado no teste anterior usa a foto do repositório simulado —

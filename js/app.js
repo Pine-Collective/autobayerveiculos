@@ -231,8 +231,9 @@
           <p class="vehicle-sub">${escapeHtml(vehicle.type)} · ${formatKm(vehicle.km)} · ${escapeHtml(vehicle.gear)}</p>
           <div class="vehicle-meta">
             <div>
-              <span>A partir de</span>
+              <span>À vista</span>
               <strong class="price">${formatPrice(vehicle.price)}</strong>
+              ${vehicle.priceTroca ? `<span class="price-troca">na troca ${formatPrice(vehicle.priceTroca)}</span>` : ''}
             </div>
             <span class="card-arrow" aria-hidden="true">↗</span>
           </div>
@@ -346,14 +347,23 @@
            </div>`
         : '';
 
+    // Moto não tem portas — a linha some em vez de aparecer vazia.
     const specs = [
       ['Combustível', vehicle.fuel],
       ['Câmbio', vehicle.gear],
       ['Cor', vehicle.color],
-      ['Portas', vehicle.doors],
+      vehicle.doors ? ['Portas', vehicle.doors] : null,
       ['Quilometragem', formatKm(vehicle.km)],
       ['Categoria', vehicle.type]
-    ];
+    ].filter(Boolean);
+
+    const features = vehicle.features || [];
+    const listaItens = features.length
+      ? `<div class="modal-features">
+           <h3>Itens do veículo</h3>
+           <ul>${features.map((item) => `<li>${escapeHtml(item)}</li>`).join('')}</ul>
+         </div>`
+      : '';
 
     return `
       <div class="modal-layout">
@@ -378,9 +388,16 @@
               .join('')}
           </dl>
 
+          ${listaItens}
+
           <div class="modal-price">
             <span class="vehicle-sub">${vehicle.sold ? 'Valor anunciado' : 'Preço à vista'}</span>
             <strong class="price">${formatPrice(vehicle.price)}</strong>
+            ${
+              vehicle.priceTroca
+                ? `<span class="price-troca">Na troca ${formatPrice(vehicle.priceTroca)}</span>`
+                : ''
+            }
           </div>
 
           <a class="btn btn-primary" target="_blank" rel="noopener"

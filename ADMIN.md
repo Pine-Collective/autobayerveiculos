@@ -107,10 +107,54 @@ fizer mais sentido, é só excluir.
 
 ### Cadastrar um veículo
 
-**+ Novo veículo** → preencher → **Enviar fotos** → **Aplicar** → **Publicar**.
+**+ Novo veículo** → preencher → **Adicionar fotos** → **Aplicar** → **Publicar**.
 
 Preço e quilometragem aceitam digitação livre: o campo formata sozinho e mostra
 o valor final embaixo.
+
+### Colar anúncio pronto (o atalho)
+
+Dentro do editor há o botão **📋 Colar anúncio pronto**. Cole o texto do
+anúncio como ele já está escrito no WhatsApp e clique em **Preencher
+formulário** — marca, modelo, tipo, ano, km, os dois preços e a lista de itens
+são extraídos sozinhos.
+
+```
+Corsa classic 1.0 VHC        →  Marca: Chevrolet (deduzida do modelo)
+Ano 2003                        Tipo: Sedan
+Km:267.000                      Ano: 2003 · Km: 267.000
+4 portas                        À vista: 15.900 · Na troca: 16.900
+Avista R$15.900,00              Itens: Desembaçador, Vidros manuais
+Na troca R$16.900,00
+Faço financiamento           →  (ignorado: é condição de pagamento)
+```
+
+**O que ele NÃO consegue adivinhar:** cor e fotos nunca aparecem no anúncio, e
+o ano falta na maioria deles. O painel avisa em amarelo o que ficou faltando —
+complete antes de aplicar.
+
+Confira sempre **câmbio e combustível**: quando o anúncio não diz, o sistema
+chuta (Manual/Flex) e o chute pode estar errado.
+
+### Dois preços
+
+Todo anúncio da loja tem "à vista" e "na troca". O site mostra o **à vista como
+preço principal** e o da troca numa linha menor embaixo. O preço na troca é
+opcional — deixe em branco se não se aplica.
+
+Se você digitar um valor de troca **menor** que o à vista, o painel avisa na
+hora: quase sempre é dígito trocado.
+
+### Motos
+
+Motos entram no catálogo normalmente: escolha **Moto** no tipo e o campo
+"portas" desaparece. Elas ganham aba própria na listagem do site.
+
+### Itens e opcionais
+
+Um por linha. É o que o comprador procura — "ar condicionado", "direção
+hidráulica", "vidros elétricos" — e aparece numa lista com ✓ no detalhe do
+veículo. Quem cola um anúncio já recebe essa lista preenchida.
 
 ### Fotos
 
@@ -192,11 +236,39 @@ O estoque é `data/vehicles.json` — fonte da verdade, editável direto no repo
 `lib/vehicle-schema.mjs` — os dois gerados ficam fora do Git.
 
 ```bash
-npm test               # unitários: site + painel + consistência de CSS
+npm test               # unitários: parser + site + painel + consistência de CSS
 npm run test:e2e       # navegador real (Chromium) contra o public/ do build
 npm run data           # regenera os arquivos derivados
 node scripts/prune-photos.mjs   # lista fotos órfãs (--apagar para remover)
 ```
+
+### Importar vários anúncios de uma vez
+
+Para popular o estoque a partir de um arquivo de texto com vários anúncios
+separados por linha em branco:
+
+```bash
+node scripts/import-anuncios.mjs anuncios.txt            # só mostra o que daria
+node scripts/import-anuncios.mjs anuncios.txt --gravar   # acrescenta ao estoque
+```
+
+O importador **recusa** quem estiver sem ano, km ou preço, e lista exatamente
+as linhas que faltam para você completar no arquivo. Os que entram vêm
+marcados como **vendido** e com foto provisória — abra o painel, envie as
+fotos reais e desmarque para publicar. É proposital: veículo sem foto no ar é
+pior que veículo nenhum.
+
+### Ensinar modelos novos ao interpretador
+
+As tabelas de marca e tipo vivem em `lib/parse-anuncio.mjs`
+(`MODELOS_POR_MARCA` e `TIPO_POR_MODELO`). Para reconhecer um modelo novo,
+acrescente a palavra-chave na marca certa. Em `TIPO_POR_MODELO` **a ordem
+importa**: o primeiro padrão que casa vence, então o mais específico vem
+antes — é por isso que "Corsa Classic" é lido como o sedan Classic e não como
+o hatch Corsa.
+
+Os testes usam anúncios reais da loja (`scripts/fixtures/anuncios-reais.txt`).
+Se o jeito de escrever mudar, é ali que o desencontro aparece primeiro.
 
 As regras de validação vivem em `lib/vehicle-schema.mjs` e rodam nos dois
 lados: no build e na API. Os testes simulam o GitHub em memória — nenhum

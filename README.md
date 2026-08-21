@@ -25,8 +25,10 @@ js/app.js               catálogo, filtros, modal, favoritos
 js/vehicles.js          GERADO a partir do JSON — fora do Git
 admin/                  painel do estoque (ver ADMIN.md)
 admin/schema.js         GERADO de lib/vehicle-schema.mjs — fora do Git
+admin/parser.js         GERADO de lib/parse-anuncio.mjs — fora do Git
 api/                    funções serverless que gravam no GitHub
 lib/vehicle-schema.mjs  validação e regras de slug (build + API + painel)
+lib/parse-anuncio.mjs   lê anúncio em texto e devolve rascunho de veículo
 assets/                 logo, favicon, imagem de compartilhamento
 scripts/                build, geradores, testes unitários e e2e/
 vercel.json             headers de segurança/cache e diretório de saída
@@ -62,7 +64,8 @@ considerações de segurança estão em **[ADMIN.md](ADMIN.md)**.
 
 ### Cadastrar ou vender um carro
 
-Pelo painel: **[/admin/](ADMIN.md)**. Direto no repositório: edite
+Pelo painel: **[/admin/](ADMIN.md)** — inclusive colando o texto do anúncio
+pronto, que preenche o formulário sozinho. Direto no repositório: edite
 **`data/vehicles.json`** — `npm run data` valida e regenera o arquivo que o site
 consome. Não é preciso mexer em nenhum outro lugar: contadores das abas, filtro
 de marca, ordenação, sitemap e dados estruturados do Google se ajustam sozinhos

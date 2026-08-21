@@ -76,8 +76,44 @@ window.AUTOBAYER_SCHEMA = {
 `;
 await writeFile(join(root, 'admin/schema.js'), schema, 'utf8');
 
+/*
+ * E gera admin/parser.js a partir de lib/parse-anuncio.mjs, pela mesma razão:
+ * o painel precisa do interpretador de anúncios no navegador, e o importador
+ * em lote precisa dele no Node. Um arquivo só, duas saídas.
+ *
+ * A transformação é deliberadamente burra — tira o import, tira os `export`
+ * e amarra as dependências ao AUTOBAYER_SCHEMA já carregado. Se algum dia o
+ * módulo ganhar sintaxe que isso não cubra, os testes do admin quebram na
+ * hora (o painel não carrega sem o parser).
+ */
+const fonteParser = await readFile(join(root, 'lib/parse-anuncio.mjs'), 'utf8');
+const corpoParser = fonteParser
+  .replace(/^import\s+\{[^}]*\}\s+from\s+'\.\/vehicle-schema\.mjs';\s*$/m, '')
+  .replace(/^export /gm, '');
+
+const parser = `/**
+ * ARQUIVO GERADO — não edite à mão.
+ *
+ * Fonte: lib/parse-anuncio.mjs
+ * Gere novamente com: npm run data
+ */
+(function () {
+  'use strict';
+  const { TIPOS, COMBUSTIVEIS, gerarSlug } = window.AUTOBAYER_SCHEMA;
+
+${corpoParser
+  .split('\n')
+  .map((linha) => (linha.trim() ? `  ${linha}` : linha))
+  .join('\n')}
+
+  window.AUTOBAYER_PARSER = { parseAnuncio, separarAnuncios, MODELOS_POR_MARCA };
+})();
+`;
+await writeFile(join(root, 'admin/parser.js'), parser, 'utf8');
+
 const disponiveis = vehicles.filter((v) => !v.sold).length;
 console.log(
-  `js/vehicles.js e admin/schema.js gerados — ${vehicles.length} veículos ` +
+  `js/vehicles.js, admin/schema.js e admin/parser.js gerados — ` +
+    `${vehicles.length} veículos ` +
     `(${disponiveis} disponíveis, ${vehicles.length - disponiveis} vendidos).`
 );

@@ -21,12 +21,14 @@
   const CHAVE_TOKEN = 'autobayer:admin:token';
 
   const SCHEMA = window.AUTOBAYER_SCHEMA;
-  if (!SCHEMA) {
+  const PARSER = window.AUTOBAYER_PARSER;
+  if (!SCHEMA || !PARSER) {
     document.body.textContent =
-      'Arquivo /admin/schema.js não carregou. Rode "npm run data" e publique de novo.';
+      'Arquivos gerados do painel não carregaram. Rode "npm run data" e publique de novo.';
     return;
   }
   const { TIPOS, COMBUSTIVEIS, CAMBIOS, SELOS, gerarSlug, slugUnico } = SCHEMA;
+  const TIPO_MOTO = 'Moto';
 
   const $ = (seletor) => document.querySelector(seletor);
 
@@ -262,7 +264,10 @@
                 <h3 class="item-nome">${escapar(v.brand)} ${escapar(v.model)}${etiquetas}</h3>
                 <p class="item-sub">
                   ${v.year} · ${escapar(v.type)} · ${numero.format(v.km)} km
-                  <strong class="item-preco">${brl.format(v.price)}</strong>
+                  <strong class="item-preco">
+                    ${brl.format(v.price)}
+                    ${v.priceTroca ? `<span class="item-troca">troca ${brl.format(v.priceTroca)}</span>` : ''}
+                  </strong>
                 </p>
               </div>
               <div class="item-acoes">
@@ -322,7 +327,9 @@
           type: TIPOS[0],
           km: 0,
           price: 0,
+          priceTroca: 0,
           images: [],
+          features: [],
           badge: '',
           featured: false,
           sold: false,
@@ -346,6 +353,7 @@
     $('#f-year').value = veiculo.year;
     $('#f-type').value = veiculo.type;
     $('#f-price').value = veiculo.price ? numero.format(veiculo.price) : '';
+    $('#f-priceTroca').value = veiculo.priceTroca ? numero.format(veiculo.priceTroca) : '';
     $('#f-km').value = veiculo.km ? numero.format(veiculo.km) : '';
     $('#f-fuel').value = veiculo.fuel;
     $('#f-gear').value = veiculo.gear;
@@ -354,14 +362,37 @@
     $('#f-badge').value = veiculo.badge || '';
     $('#f-featured').checked = Boolean(veiculo.featured);
     $('#f-sold').checked = Boolean(veiculo.sold);
+    $('#f-features').value = (veiculo.features || []).join('\n');
 
     atualizarDicas();
+    atualizarContagemItens();
+    aplicarTipo();
     renderizarGaleria();
     $('#avisoFormulario').hidden = true;
     $('#colarLink').hidden = true;
+    $('#colarAnuncioCaixa').hidden = true;
+    $('#avisosParser').hidden = true;
+    $('#textoAnuncio').value = '';
     $('#modalEditor').hidden = false;
     $('#f-brand').focus();
   }
+
+  /** Moto não tem portas: o campo some em vez de guardar um valor sem sentido. */
+  function aplicarTipo() {
+    $('#campoPortas').hidden = $('#f-type').value === TIPO_MOTO;
+  }
+
+  $('#f-type').addEventListener('change', aplicarTipo);
+
+  function atualizarContagemItens() {
+    const n = $('#f-features')
+      .value.split('\n')
+      .map((l) => l.trim())
+      .filter(Boolean).length;
+    $('#contagemFeatures').textContent = n ? `${n} ${n === 1 ? 'item' : 'itens'}` : ' ';
+  }
+
+  $('#f-features').addEventListener('input', atualizarContagemItens);
 
   function fecharEditor() {
     $('#modalEditor').hidden = true;
@@ -386,18 +417,96 @@
 
   function atualizarDicas() {
     const preco = Number(soDigitos($('#f-price').value));
+    const troca = Number(soDigitos($('#f-priceTroca').value));
     const km = Number(soDigitos($('#f-km').value));
+
     $('#dicaPreco').textContent = preco ? brl.format(preco) : ' ';
     $('#dicaKm').textContent = km ? `${numero.format(km)} km` : ' ';
+
+    // Troca menor que à vista costuma ser dígito trocado — avisa na hora,
+    // antes de a API recusar a publicação inteira.
+    const dicaTroca = $('#dicaPrecoTroca');
+    if (!troca) {
+      dicaTroca.textContent = 'opcional';
+      dicaTroca.classList.remove('dica-erro');
+    } else if (preco && troca < preco) {
+      dicaTroca.textContent = 'menor que o à vista — confira';
+      dicaTroca.classList.add('dica-erro');
+    } else {
+      dicaTroca.textContent = brl.format(troca);
+      dicaTroca.classList.remove('dica-erro');
+    }
   }
 
-  ['#f-price', '#f-km'].forEach((seletor) => {
+  ['#f-price', '#f-priceTroca', '#f-km'].forEach((seletor) => {
     $(seletor).addEventListener('input', function () {
       const digitos = soDigitos(this.value);
       this.value = digitos ? numero.format(Number(digitos)) : '';
       atualizarDicas();
     });
   });
+
+  /* ------------------------------------------------------------------ */
+  /* Colar anúncio: preenche o formulário a partir do texto              */
+  /* ------------------------------------------------------------------ */
+
+  $('#botaoColarAnuncio').addEventListener('click', () => {
+    const caixa = $('#colarAnuncioCaixa');
+    caixa.hidden = !caixa.hidden;
+    if (!caixa.hidden) $('#textoAnuncio').focus();
+  });
+
+  $('#botaoCancelarAnuncio').addEventListener('click', () => {
+    $('#colarAnuncioCaixa').hidden = true;
+    $('#textoAnuncio').value = '';
+  });
+
+  $('#botaoInterpretar').addEventListener('click', () => {
+    const texto = $('#textoAnuncio').value.trim();
+    if (!texto) return;
+
+    const { veiculo, avisos } = PARSER.parseAnuncio(texto);
+    if (!veiculo) {
+      mostrarAvisosParser(['Não consegui ler nada desse texto.'], true);
+      return;
+    }
+
+    // Preenche só o que veio do anúncio; o resto o usuário completa.
+    if (veiculo.brand) $('#f-brand').value = veiculo.brand;
+    if (veiculo.model) $('#f-model').value = veiculo.model;
+    if (veiculo.year) $('#f-year').value = veiculo.year;
+    $('#f-type').value = veiculo.type;
+    if (veiculo.km) $('#f-km').value = numero.format(veiculo.km);
+    if (veiculo.price) $('#f-price').value = numero.format(veiculo.price);
+    if (veiculo.priceTroca) $('#f-priceTroca').value = numero.format(veiculo.priceTroca);
+    $('#f-fuel').value = veiculo.fuel;
+    $('#f-gear').value = veiculo.gear;
+    $('#f-badge').value = veiculo.badge || '';
+    if (veiculo.doors !== undefined) $('#f-doors').value = veiculo.doors;
+    if (veiculo.features.length) $('#f-features').value = veiculo.features.join('\n');
+
+    aplicarTipo();
+    atualizarDicas();
+    atualizarContagemItens();
+    mostrarAvisosParser(avisos, false);
+
+    $('#colarAnuncioCaixa').hidden = true;
+    $('#textoAnuncio').value = '';
+
+    // Leva o usuário direto ao primeiro campo que ficou em branco.
+    const alvo = !veiculo.brand ? '#f-brand' : !veiculo.year ? '#f-year' : '#f-color';
+    $(alvo).focus();
+  });
+
+  function mostrarAvisosParser(avisos, erro) {
+    const caixa = $('#avisosParser');
+    caixa.className = `avisos-parser${erro ? ' erro' : ''}`;
+    caixa.innerHTML =
+      `<strong>Confira antes de salvar:</strong><ul>` +
+      avisos.map((a) => `<li>${escapar(a)}</li>`).join('') +
+      `</ul>`;
+    caixa.hidden = false;
+  }
 
   /* ------------------------------------------------------------------ */
   /* Fotos — pré-visualização local; o envio acontece só no Publicar     */
@@ -580,7 +689,13 @@
     if (!brand) problemas.push('Informe a marca.');
     if (!model) problemas.push('Informe o modelo.');
     if (!year || year < 1950) problemas.push('Informe um ano válido.');
-    if (Number(soDigitos($('#f-price').value)) <= 0) problemas.push('Informe o preço.');
+
+    const precoAvista = Number(soDigitos($('#f-price').value));
+    const precoTroca = Number(soDigitos($('#f-priceTroca').value));
+    if (precoAvista <= 0) problemas.push('Informe o preço à vista.');
+    if (precoTroca && precoTroca < precoAvista) {
+      problemas.push('O preço na troca está menor que o à vista — confira os valores.');
+    }
     if (fotosEditor.length === 0) problemas.push('Adicione ao menos uma foto.');
 
     if (problemas.length) {
@@ -591,6 +706,8 @@
 
     const novo = estado.editandoId === null;
     const existente = novo ? null : estado.vehicles.find((v) => v.id === estado.editandoId);
+
+    const tipo = $('#f-type').value;
 
     const veiculo = {
       id: existente ? existente.id : Date.now(),
@@ -605,18 +722,24 @@
       brand,
       model,
       year,
-      type: $('#f-type').value,
+      type: tipo,
       km: Number(soDigitos($('#f-km').value)),
       price: Number(soDigitos($('#f-price').value)),
+      priceTroca: Number(soDigitos($('#f-priceTroca').value)),
       images: [...fotosEditor],
+      features: $('#f-features')
+        .value.split('\n')
+        .map((l) => l.trim())
+        .filter(Boolean),
       badge: $('#f-badge').value,
       featured: $('#f-featured').checked,
       sold: $('#f-sold').checked,
       fuel: $('#f-fuel').value,
       gear: $('#f-gear').value,
-      color: $('#f-color').value.trim(),
-      doors: Number($('#f-doors').value) || 4
+      color: $('#f-color').value.trim()
     };
+
+    if (tipo !== TIPO_MOTO) veiculo.doors = Number($('#f-doors').value) || 4;
 
     if (novo) {
       estado.vehicles.push(veiculo);

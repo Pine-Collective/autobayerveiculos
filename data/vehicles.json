@@ -17,7 +17,18 @@
     "fuel": "Flex",
     "gear": "Automático",
     "color": "Cinza grafite",
-    "doors": 4
+    "doors": 4,
+    "priceTroca": 159900,
+    "features": [
+      "Ar condicionado digital",
+      "Direção elétrica",
+      "Vidros elétricos",
+      "Central multimídia",
+      "Câmera de ré",
+      "Rodas de liga leve",
+      "Bancos em couro",
+      "Controle de estabilidade"
+    ]
   },
   {
     "id": 2,
@@ -37,7 +48,17 @@
     "fuel": "Flex",
     "gear": "Automático",
     "color": "Prata",
-    "doors": 4
+    "doors": 4,
+    "priceTroca": 124900,
+    "features": [
+      "Ar condicionado",
+      "Direção elétrica",
+      "Vidros elétricos",
+      "Central multimídia",
+      "Sensor de estacionamento",
+      "Rodas de liga leve",
+      "Piloto automático"
+    ]
   },
   {
     "id": 3,
@@ -57,7 +78,16 @@
     "fuel": "Flex",
     "gear": "Automático",
     "color": "Branco",
-    "doors": 4
+    "doors": 4,
+    "priceTroca": 0,
+    "features": [
+      "Ar condicionado",
+      "Direção elétrica",
+      "Vidros elétricos",
+      "Central multimídia",
+      "Rodas de liga leve",
+      "Faróis de LED"
+    ]
   },
   {
     "id": 4,
@@ -77,7 +107,18 @@
     "fuel": "Gasolina",
     "gear": "Automático",
     "color": "Preto",
-    "doors": 4
+    "doors": 4,
+    "priceTroca": 149900,
+    "features": [
+      "Ar condicionado digital",
+      "Bancos em couro",
+      "Teto solar",
+      "Central multimídia",
+      "Câmera de ré",
+      "Rodas de liga leve",
+      "Piloto automático",
+      "Faróis de LED"
+    ]
   },
   {
     "id": 5,
@@ -97,7 +138,15 @@
     "fuel": "Flex",
     "gear": "Automático",
     "color": "Vermelho",
-    "doors": 4
+    "doors": 4,
+    "priceTroca": 86900,
+    "features": [
+      "Ar condicionado",
+      "Direção elétrica",
+      "Vidros elétricos",
+      "Central multimídia",
+      "Rodas de liga leve"
+    ]
   },
   {
     "id": 6,
@@ -117,6 +166,17 @@
     "fuel": "Diesel",
     "gear": "Automático",
     "color": "Branco",
-    "doors": 4
+    "doors": 4,
+    "priceTroca": 0,
+    "features": [
+      "Ar condicionado",
+      "Tração 4x4",
+      "Direção hidráulica",
+      "Vidros elétricos",
+      "Estribos laterais",
+      "Capota marítima",
+      "Rodas de liga leve",
+      "Bancos em couro"
+    ]
   }
 ]

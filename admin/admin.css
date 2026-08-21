@@ -725,6 +725,86 @@ select option {
   flex: 1;
 }
 
+/* ---------------------------------------------------------------- */
+/* Colar anúncio                                                     */
+/* ---------------------------------------------------------------- */
+
+.colar-anuncio {
+  border: 1px dashed var(--line);
+  border-radius: 6px;
+  padding: 14px;
+}
+
+.colar-anuncio > .btn {
+  width: 100%;
+}
+
+.colar-anuncio-caixa {
+  margin-top: 12px;
+}
+
+textarea {
+  width: 100%;
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  color: var(--text);
+  padding: 11px 13px;
+  font: inherit;
+  font-size: 15px;
+  line-height: 1.5;
+  resize: vertical;
+}
+
+textarea:focus {
+  outline: none;
+  border-color: #6a6d75;
+}
+
+.colar-anuncio-acoes {
+  display: flex;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.colar-anuncio-acoes .btn {
+  flex: 1;
+}
+
+.avisos-parser {
+  background: #3a2a12;
+  border: 1px solid #6b4d1f;
+  color: #f0c674;
+  border-radius: 4px;
+  padding: 12px 14px;
+  font-size: 12px;
+  line-height: 1.5;
+  margin-top: 12px;
+}
+
+.avisos-parser.erro {
+  background: #2a1113;
+  border-color: #5c2126;
+  color: #ffb3ba;
+}
+
+.avisos-parser ul {
+  margin: 6px 0 0;
+  padding-left: 18px;
+}
+
+.dica-erro {
+  color: #ff9aa2 !important;
+}
+
+.item-troca {
+  display: block;
+  font-size: 11px;
+  font-weight: 400;
+  color: var(--muted);
+  margin-top: 2px;
+}
+
 .progresso {
   font-size: 12px;
   color: var(--muted);

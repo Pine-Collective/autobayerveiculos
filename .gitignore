@@ -5,6 +5,7 @@ public/
 # Gerados por npm run data (fontes: data/vehicles.json e lib/vehicle-schema.mjs)
 js/vehicles.js
 admin/schema.js
+admin/parser.js
 
 # Playwright
 test-results/
